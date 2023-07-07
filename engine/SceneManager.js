@@ -47,6 +47,7 @@ SceneManager.createScene = function(newScene){
  */
 SceneManager.loadScene = function(newScene){
     var scene = SceneManager.createScene(newScene);
+    SceneManager.originCtxTransform = this.canvasCtx.getTransform();
     // load background based off currentState.player.location
     SceneManager.renderScene(scene);
     // load player
@@ -62,19 +63,27 @@ SceneManager.renderScene = function(scene){
     // and load data/update state of our game
     // but for now: we are just a square
 
-    // using the player's location, 
-    // we want to figure out the segment of the map to load
-    var x = GameState.currentState.player.location.x;
-    var y = GameState.currentState.player.location.y;
-
-    // until then, we will just use a gradient to test out everything
-    var background = this.canvasCtx.createLinearGradient(0, 0, 500, 500);
+    // reset canvas
+    this.canvasCtx.clearRect(0, 0, this.canvasCtx.width, this.canvasCtx.height);
+    // Load initial background
+    var background = this.canvasCtx.createLinearGradient(0, 0, 550, 550);
     background.addColorStop(0, "blue");
     background.addColorStop(1, "green");
 
     // Fill with gradient
     this.canvasCtx.fillStyle = background;
-    this.canvasCtx.fillRect(0, 0, 500, 500);
+    this.canvasCtx.fillRect(0, 0, 550, 550);
+
+    // using the player's location, 
+    // we want to figure out the segment of the map to load
+    var x = GameState.currentState.player.location.x;
+    var y = GameState.currentState.player.location.y;
+
+    // need to reset the canvas transform
+    var transform = this.canvasCtx.getTransform();
+    transform.e = x;
+    transform.f = y;
+    this.canvasCtx.setTransform(transform);
 };
 
 /**
@@ -93,9 +102,12 @@ SceneManager.loadPlayer = function(){
     // y coordinate of player (need to subtract half the height as an offset to truly center)
     var y = (this.canvasEl.height / 2) - (PLAYER_HEIGHT / 2);
 
+    var xOffset = GameState.currentState.player.location.x;
+    var yOffset = GameState.currentState.player.location.y;
+
     // draw to screen
     this.canvasCtx.fillStyle = PLAYER_COLOR;
-    this.canvasCtx.fillRect(x, y, width, height);
+    this.canvasCtx.fillRect(x - xOffset, y - yOffset, width, height);
 };
 
 /**
