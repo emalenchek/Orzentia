@@ -23,6 +23,8 @@ GameState.newStateTemplate = {
             "legs": {},
             "feet": {}
         },
+        // speed at which the PC can move
+        "speed": 1,
         "currency": 0,
         // an x/y coordinate on the map
         "location": {

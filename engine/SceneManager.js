@@ -7,9 +7,9 @@ var SceneManager = {};
 
 // members //
 SceneManager.availableScenes = {
-    "initial": {
-        name: "initial",
-        description: "The initial load scene of the game, (PRESS START)"
+    "default": {
+        name: "default",
+        description: "The default load scene of the game"
     }
 };
 SceneManager.activeScene = null;
@@ -45,7 +45,10 @@ SceneManager.createScene = function(newScene){
  */
 SceneManager.loadScene = function(newScene){
     var scene = SceneManager.createScene(newScene);
+    // load background based off currentState.player.location
     SceneManager.renderScene(scene);
+    // load player
+    SceneManager.loadPlayer();
 };
 
 /**
@@ -56,7 +59,20 @@ SceneManager.renderScene = function(scene){
     // nothing yet.. eventually we will use information from the scene to load in proper assets
     // and load data/update state of our game
     // but for now: we are just a square
-    SceneManager.loadPlayer();
+
+    // using the player's location, 
+    // we want to figure out the segment of the map to load
+    var x = GameState.currentState.player.location.x;
+    var y = GameState.currentState.player.location.y;
+
+    // until then, we will just use a gradient to test out everything
+    var background = this.canvasCtx.createLinearGradient(0, 0, 500, 500);
+    background.addColorStop(0, "blue");
+    background.addColorStop(1, "green");
+
+    // Fill with gradient
+    this.canvasCtx.fillStyle = background;
+    this.canvasCtx.fillRect(10, 10, 480, 480);
 };
 
 /**

@@ -8,8 +8,8 @@ Game = {};
 Game.start = function(){
     // nothing yet
     console.log("game start");
-    SceneManager.loadScene("initial");
     GameState.createNewGameState();
+    SceneManager.loadScene("default");
 };
 
 Game.restart = function(){
