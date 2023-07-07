@@ -23,12 +23,19 @@ Game.end = function(){
 
 Game.setInputHandlers = function(){
     window.addEventListener("keydown", function(event){
+        event.preventDefault();
         switch(event.key){
             case "ArrowUp":
             case "ArrowDown":
             case "ArrowLeft":
             case "ArrowRight":
-                GameState.activeKeys.push(event.key);
+                var length = GameState.activeKeys.filter(function(key){
+                    return key === event.key;
+                }).length;
+                if (!length){
+                    GameState.activeKeys.push(event.key);
+                }
+                console.log(GameState.activeKeys);
                 break;
             default:
                 break;
@@ -36,6 +43,7 @@ Game.setInputHandlers = function(){
     });
 
     window.addEventListener("keyup", function(event){
+        event.preventDefault();
         switch(event.key){
             case "ArrowUp":
             case "ArrowDown":
@@ -45,6 +53,7 @@ Game.setInputHandlers = function(){
                     GameState.activeKeys.indexOf(event.key),
                     1
                 );
+                console.log(GameState.activeKeys);
                 break;
             default:
                 break;

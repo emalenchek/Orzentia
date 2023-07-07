@@ -111,6 +111,10 @@ SceneManager.updateActiveScene = function(){
         }
         lastFrameTime = time;
 
+        if (GameState.activeKeys.length){
+            GameState.updatePlayerLocation();
+        }
+
         SceneManager.renderScene(SceneManager.activeScene);
         SceneManager.loadPlayer();
 

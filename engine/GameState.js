@@ -49,3 +49,23 @@ GameState.createNewGameState = function(){
     GameState.currentState.isActive = true;
     SceneManager.updateActiveScene();
 };
+
+GameState.updatePlayerLocation = function(){
+    GameState.activeKeys.map(function(key){
+        switch (key){
+            case "ArrowUp":
+                // move character up
+                GameState.player.location.y += GameState.player.speed;
+            case "ArrowDown":
+                // move character up
+                GameState.player.location.y -= GameState.player.speed;
+            case "ArrowRight":
+                // move character up
+                GameState.player.location.x += GameState.player.speed;
+            case "ArrowLeft":
+                // move character up
+                GameState.player.location.x -= GameState.player.speed;
+        }
+        return;
+    })
+};
