@@ -19,7 +19,7 @@ SceneManager.sceneStack = [];
 SceneManager.canvasEl = document.getElementById("game-canvas");
 SceneManager.canvasCtx = SceneManager.canvasEl.getContext("2d");
 
-var FPS = 60;
+var FPS = 30;
 var FRAME_MIN_TIME = (1000/60) * (60 / FPS) - (1000/60) * 0.5;
 var PLAYER_WIDTH = 25;
 var PLAYER_HEIGHT = 25;

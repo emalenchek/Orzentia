@@ -55,16 +55,26 @@ GameState.updatePlayerLocation = function(){
         switch (key){
             case "ArrowUp":
                 // move character up
-                GameState.player.location.y += GameState.player.speed;
+                GameState.currentState.player.location.y +=
+                    GameState.currentState.player.speed;
+                break;
             case "ArrowDown":
                 // move character up
-                GameState.player.location.y -= GameState.player.speed;
+                GameState.currentState.player.location.y -=
+                    GameState.currentState.player.speed;
+                break;
             case "ArrowRight":
                 // move character up
-                GameState.player.location.x += GameState.player.speed;
+                GameState.currentState.player.location.x +=
+                    GameState.currentState.player.speed;
+                break;
             case "ArrowLeft":
                 // move character up
-                GameState.player.location.x -= GameState.player.speed;
+                GameState.currentState.player.location.x -=
+                    GameState.currentState.player.speed;
+                break;
+            default:
+                break;
         }
         return;
     })
