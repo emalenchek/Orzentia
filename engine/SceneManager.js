@@ -72,7 +72,7 @@ SceneManager.renderScene = function(scene){
 
     // Fill with gradient
     this.canvasCtx.fillStyle = background;
-    this.canvasCtx.fillRect(0, 0, 550, 550);
+    this.canvasCtx.fillRect(0, 0, 1000, 1000);
 
     // using the player's location, 
     // we want to figure out the segment of the map to load
@@ -81,7 +81,7 @@ SceneManager.renderScene = function(scene){
 
     // need to reset the canvas transform
     var transform = this.canvasCtx.getTransform();
-    transform.e = x;
+    transform.e = -x;
     transform.f = y;
     this.canvasCtx.setTransform(transform);
 };
@@ -107,7 +107,7 @@ SceneManager.loadPlayer = function(){
 
     // draw to screen
     this.canvasCtx.fillStyle = PLAYER_COLOR;
-    this.canvasCtx.fillRect(x - xOffset, y - yOffset, width, height);
+    this.canvasCtx.fillRect(x + xOffset, y - yOffset, width, height);
 };
 
 /**
