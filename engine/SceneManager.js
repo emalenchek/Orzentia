@@ -19,8 +19,8 @@ SceneManager.sceneStack = [];
 SceneManager.canvasEl = document.getElementById("game-canvas");
 SceneManager.canvasCtx = SceneManager.canvasEl.getContext("2d");
 
-var PLAYER_WIDTH = 50;
-var PLAYER_HEIGHT = 50;
+var PLAYER_WIDTH = 25;
+var PLAYER_HEIGHT = 25;
 var PLAYER_COLOR = "rgb(200, 0, 0)";
 
 // methods //
