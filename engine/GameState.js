@@ -6,7 +6,3 @@
 var GameState = {};
 
 GameState.activeState = null;
-
-
-// export module
-module.exports = GameState;

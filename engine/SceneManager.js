@@ -15,6 +15,14 @@ SceneManager.availableScenes = {
 SceneManager.activeScene = null;
 SceneManager.sceneStack = [];
 
+// This is the canvas element
+SceneManager.canvasEl = document.getElementById("game-canvas");
+SceneManager.canvasCtx = SceneManager.canvasEl.getContext("2d");
+
+var PLAYER_WIDTH = 50;
+var PLAYER_HEIGHT = 50;
+var PLAYER_COLOR = "rgb(200, 0, 0)";
+
 // methods //
 
 /**
@@ -23,12 +31,12 @@ SceneManager.sceneStack = [];
  * @returns 
  */
 SceneManager.createScene = function(newScene){
-    var scene = SceneManager.availableScenes.newScene;
+    var scene = SceneManager.availableScenes[newScene];
     // set the active scene to the newly created scene
     SceneManager.activeScene = scene;
     // add the new scene to the scene stack
     SceneManager.sceneStack.push(scene);
-    return newScene;
+    return scene;
 };
 
 /**
@@ -45,7 +53,31 @@ SceneManager.loadScene = function(newScene){
  * @param {Scene} scene - scene object to be rendered 
  */
 SceneManager.renderScene = function(scene){
-    // nothing yet.. 
+    // nothing yet.. eventually we will use information from the scene to load in proper assets
+    // and load data/update state of our game
+    // but for now: we are just a square
+    SceneManager.loadPlayer();
+};
+
+/**
+ * A method that loads the player character onto the scene
+ */
+SceneManager.loadPlayer = function(){
+    // for now the player is just a square, 
+    // and we want to center the character
+
+    // player width
+    var width = PLAYER_WIDTH;
+    var height = PLAYER_HEIGHT;
+
+    // x coordinate of player (need to subtract half the width as an offset to truly center)
+    var x = (this.canvasEl.width / 2) - (PLAYER_WIDTH / 2);
+    // y coordinate of player (need to subtract half the height as an offset to truly center)
+    var y = (this.canvasEl.height / 2) - (PLAYER_HEIGHT / 2);
+
+    // draw to screen
+    this.canvasCtx.fillStyle = PLAYER_COLOR;
+    this.canvasCtx.fillRect(x, y, width, height);
 };
 
 /**
@@ -56,6 +88,3 @@ SceneManager.removeTopScene = function(){
     SceneManager.sceneStack.pop();
     SceneManager.activeScene = SceneManager.sceneStack[lastSceneIndex];
 }
-
-// export module
-module.exports = SceneManager;

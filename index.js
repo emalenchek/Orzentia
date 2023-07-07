@@ -3,8 +3,6 @@
  */
 
 var Game = {};
-var GameState = require("./engine/GameState");
-var SceneManager = require("./engine/SceneManager");
 
 /**
  * Prep asset loading, and begin initializing game start
