@@ -19,6 +19,8 @@ SceneManager.sceneStack = [];
 SceneManager.canvasEl = document.getElementById("game-canvas");
 SceneManager.canvasCtx = SceneManager.canvasEl.getContext("2d");
 
+var FPS = 60;
+var FRAME_MIN_TIME = (1000/60) * (60 / FPS) - (1000/60) * 0.5;
 var PLAYER_WIDTH = 25;
 var PLAYER_HEIGHT = 25;
 var PLAYER_COLOR = "rgb(200, 0, 0)";
@@ -72,7 +74,7 @@ SceneManager.renderScene = function(scene){
 
     // Fill with gradient
     this.canvasCtx.fillStyle = background;
-    this.canvasCtx.fillRect(10, 10, 480, 480);
+    this.canvasCtx.fillRect(0, 0, 500, 500);
 };
 
 /**
@@ -97,10 +99,31 @@ SceneManager.loadPlayer = function(){
 };
 
 /**
+ * Update the state of the current scene
+ */
+SceneManager.updateActiveScene = function(){
+    // The last frame time noted
+    var lastFrameTime = 0;
+    var callback = function(time){
+        if (time - lastFrameTime < FRAME_MIN_TIME){
+            requestAnimationFrame(callback);
+            return;
+        }
+        lastFrameTime = time;
+
+        SceneManager.renderScene(SceneManager.activeScene);
+        SceneManager.loadPlayer();
+
+        requestAnimationFrame(callback);
+    };
+    requestAnimationFrame(callback);
+};
+
+/**
  * remove scene from scene stack and update activeScene
  */
 SceneManager.removeTopScene = function(){
     var lastSceneIndex = SceneManager.sceneStack.length;
     SceneManager.sceneStack.pop();
     SceneManager.activeScene = SceneManager.sceneStack[lastSceneIndex];
-}
+};

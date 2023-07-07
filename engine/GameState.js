@@ -38,6 +38,7 @@ GameState.newStateTemplate = {
 };
 
 GameState.currentState = null;
+GameState.activeKeys = [];
 
 GameState.createNewGameState = function(){
     // create a copy of the new state template
@@ -46,4 +47,5 @@ GameState.createNewGameState = function(){
     // set currentState to the new state
     GameState.currentState = state;
     GameState.currentState.isActive = true;
+    SceneManager.updateActiveScene();
 };
