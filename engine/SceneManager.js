@@ -118,7 +118,7 @@ SceneManager.getPlayerRotationValueFromOrientation = function(){
  * Determines the active sprite data based on if player is moving,
  * and in what environment
  */
-SceneManager.determineActivePlayerSprite = function(){
+SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
     if (!GameState.activeKeys.length){
         var rotation = SceneManager.getPlayerRotationValueFromOrientation();
         return {
@@ -137,7 +137,7 @@ SceneManager.determineActivePlayerSprite = function(){
                 GameState.currentState.player.orientation = "N";
                 var rotation = SceneManager.getPlayerRotationValueFromOrientation();
                 data = {
-                    "sx": 0,
+                    "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
                     "sWidth": 16,
                     "sHeight": 18,
@@ -148,7 +148,7 @@ SceneManager.determineActivePlayerSprite = function(){
                 GameState.currentState.player.orientation = "S";
                 var rotation = SceneManager.getPlayerRotationValueFromOrientation();
                 data = {
-                    "sx": 0,
+                    "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
                     "sWidth": 16,
                     "sHeight": 18,
@@ -159,7 +159,7 @@ SceneManager.determineActivePlayerSprite = function(){
                 GameState.currentState.player.orientation = "W";
                 var rotation = SceneManager.getPlayerRotationValueFromOrientation();
                 data = {
-                    "sx": 0,
+                    "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
                     "sWidth": 16,
                     "sHeight": 18,
@@ -170,7 +170,7 @@ SceneManager.determineActivePlayerSprite = function(){
                 GameState.currentState.player.orientation = "E";
                 var rotation = SceneManager.getPlayerRotationValueFromOrientation();
                 data = {
-                    "sx": 0,
+                    "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
                     "sWidth": 16,
                     "sHeight": 18,
@@ -180,7 +180,7 @@ SceneManager.determineActivePlayerSprite = function(){
             default:
                 var rotation = SceneManager.getPlayerRotationValueFromOrientation();
                 data = {
-                    "sx": 0,
+                    "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
                     "sWidth": 16,
                     "sHeight": 18,
@@ -195,7 +195,7 @@ SceneManager.determineActivePlayerSprite = function(){
 /**
  * A method that loads the player character onto the scene
  */
-SceneManager.loadPlayer = function(){
+SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex){
     // for now the player is just a square, 
     // and we want to center the character
 
@@ -214,7 +214,7 @@ SceneManager.loadPlayer = function(){
     var playerImage = document.getElementById("player-sprites");
 
     // Get the correct sprite data
-    var spritesheetData = SceneManager.determineActivePlayerSprite();
+    var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
 
     // Draw image to canvas
     this.canvasCtx.drawImage(
@@ -235,21 +235,32 @@ SceneManager.loadPlayer = function(){
  */
 SceneManager.updateActiveScene = function(){
     // The last frame time noted
-    var lastFrameTime = 0;
+    var playerWalkCycleLoop = [1,0,2,0];
+    var currentLoopIndex = 0;
+    var frameCount = 0;
+
     var callback = function(time){
-        if (time - lastFrameTime < FRAME_MIN_TIME){
+        frameCount++;
+        if (frameCount <= 10 && frameCount !== 0){
             requestAnimationFrame(callback);
             return;
         }
-        lastFrameTime = time;
+        frameCount = 1;
 
         if (GameState.activeKeys.length){
             GameState.updatePlayerLocation();
         }
 
         SceneManager.renderScene(SceneManager.activeScene);
-        SceneManager.loadPlayer();
 
+        frameCount++;
+        SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex);
+        currentLoopIndex++;
+
+        // reset the loop index
+        if (currentLoopIndex >= playerWalkCycleLoop.length){
+            currentLoopIndex = 0;
+        }
         requestAnimationFrame(callback);
     };
     requestAnimationFrame(callback);
