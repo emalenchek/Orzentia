@@ -31,6 +31,10 @@ GameState.newStateTemplate = {
             x: 0,
             y: 0
         },
+        // N,S,E,W (direction being faced)
+        "orientation": "S",
+        "spritesheetSource": "./assets/spritesheets/Green-Cap-Character-16x18.png",
+
         //, ... much more probably
     },
     // changes can and will happen to player data in an active game state

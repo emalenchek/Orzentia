@@ -19,6 +19,8 @@ SceneManager.sceneStack = [];
 SceneManager.canvasEl = document.getElementById("game-canvas");
 SceneManager.canvasCtx = SceneManager.canvasEl.getContext("2d");
 
+SceneManager.playerSpritesheet = document.getElementById("player-sprites");
+
 var FPS = 30;
 var FRAME_MIN_TIME = (1000/60) * (60 / FPS) - (1000/60) * 0.5;
 var PLAYER_WIDTH = 25;
@@ -87,6 +89,110 @@ SceneManager.renderScene = function(scene){
 };
 
 /**
+ * Gets the rotation value for the player's orientation
+ * Based on cardinal direction
+ */
+SceneManager.getPlayerRotationValueFromOrientation = function(){
+    var orientation = GameState.currentState.player.orientation;
+    var rotation = 0;
+    switch (orientation){
+        case "N":
+            rotation = 1;
+            break;
+        case "S":
+            rotation = 0;
+            break;
+        case "E":
+            rotation = 3;
+            break;
+        case "W":
+            rotation = 2;
+            break;
+        default:
+            break;
+    };
+    return rotation;
+};
+
+/**
+ * Determines the active sprite data based on if player is moving,
+ * and in what environment
+ */
+SceneManager.determineActivePlayerSprite = function(){
+    if (!GameState.activeKeys.length){
+        var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+        return {
+            "sx": 0,
+            "sy": 18 * rotation,
+            "sWidth": 16,
+            "sHeight": 18,
+        }
+    }
+    else {
+        // Use the last registered movement key to decide the direction
+        var activeMovement = GameState.activeKeys[GameState.activeKeys.length - 1];
+        var data = {};
+        switch (activeMovement){
+            case "ArrowUp":
+                GameState.currentState.player.orientation = "N";
+                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                data = {
+                    "sx": 0,
+                    "sy": 18 * rotation,
+                    "sWidth": 16,
+                    "sHeight": 18,
+                    "rotation": rotation
+                }
+                break;
+            case "ArrowDown":
+                GameState.currentState.player.orientation = "S";
+                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                data = {
+                    "sx": 0,
+                    "sy": 18 * rotation,
+                    "sWidth": 16,
+                    "sHeight": 18,
+                    "rotation": rotation
+                }
+                break;
+            case "ArrowLeft":
+                GameState.currentState.player.orientation = "W";
+                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                data = {
+                    "sx": 0,
+                    "sy": 18 * rotation,
+                    "sWidth": 16,
+                    "sHeight": 18,
+                    "rotation": rotation
+                }
+                break;
+            case "ArrowRight":
+                GameState.currentState.player.orientation = "E";
+                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                data = {
+                    "sx": 0,
+                    "sy": 18 * rotation,
+                    "sWidth": 16,
+                    "sHeight": 18,
+                    "rotation": rotation
+                }
+                break;
+            default:
+                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                data = {
+                    "sx": 0,
+                    "sy": 18 * rotation,
+                    "sWidth": 16,
+                    "sHeight": 18,
+                    "rotation": rotation
+                }
+                break;
+        }
+        return data;
+    }
+};
+
+/**
  * A method that loads the player character onto the scene
  */
 SceneManager.loadPlayer = function(){
@@ -105,9 +211,23 @@ SceneManager.loadPlayer = function(){
     var xOffset = GameState.currentState.player.location.x;
     var yOffset = GameState.currentState.player.location.y;
 
-    // draw to screen
-    this.canvasCtx.fillStyle = PLAYER_COLOR;
-    this.canvasCtx.fillRect(x + xOffset, y - yOffset, width, height);
+    var playerImage = document.getElementById("player-sprites");
+
+    // Get the correct sprite data
+    var spritesheetData = SceneManager.determineActivePlayerSprite();
+
+    // Draw image to canvas
+    this.canvasCtx.drawImage(
+        playerImage,
+        spritesheetData.sx,
+        spritesheetData.sy,
+        spritesheetData.sWidth,
+        spritesheetData.sHeight,
+        x + xOffset,
+        y - yOffset,
+        width,
+        height
+    );
 };
 
 /**
