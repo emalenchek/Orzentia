@@ -308,7 +308,7 @@ SceneManager.updateActiveScene = function(){
         SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
 
         // reset frame count
-        if (frameCount > 15){
+        if (frameCount > 5){
             currentLoopIndex++;
             frameCount = 0;
         }
