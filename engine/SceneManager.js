@@ -142,7 +142,7 @@ SceneManager.renderScene = function(scene){
  * Gets the rotation value for the player's orientation
  * Based on cardinal direction
  */
-SceneManager.getPlayerRotationValueFromOrientation = function(){
+SceneManager.getPlayerOrientationValue = function(){
     var orientation = GameState.currentState.player.orientation;
     var rotation = 0;
     switch (orientation){
@@ -170,7 +170,7 @@ SceneManager.getPlayerRotationValueFromOrientation = function(){
  */
 SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
     if (!GameState.activeKeys.length){
-        var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+        var rotation = SceneManager.getPlayerOrientationValue();
         return {
             "sx": 0,
             "sy": 18 * rotation,
@@ -185,7 +185,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
         switch (activeMovement){
             case "ArrowUp":
                 GameState.currentState.player.orientation = "N";
-                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                var rotation = SceneManager.getPlayerOrientationValue();
                 data = {
                     "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
@@ -196,7 +196,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 break;
             case "ArrowDown":
                 GameState.currentState.player.orientation = "S";
-                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                var rotation = SceneManager.getPlayerOrientationValue();
                 data = {
                     "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
@@ -207,7 +207,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 break;
             case "ArrowLeft":
                 GameState.currentState.player.orientation = "W";
-                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                var rotation = SceneManager.getPlayerOrientationValue();
                 data = {
                     "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
@@ -218,7 +218,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 break;
             case "ArrowRight":
                 GameState.currentState.player.orientation = "E";
-                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                var rotation = SceneManager.getPlayerOrientationValue();
                 data = {
                     "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
@@ -228,7 +228,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 }
                 break;
             default:
-                var rotation = SceneManager.getPlayerRotationValueFromOrientation();
+                var rotation = SceneManager.getPlayerOrientationValue();
                 data = {
                     "sx": 16 * cycleLoop[cycleLoopIndex],
                     "sy": 18 * rotation,
@@ -265,42 +265,20 @@ SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, frameCount){
 
     // Get the correct sprite data
 
-    if (!cycleLoop && !cycleLoopIndex && !frameCount){
-        var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
+    var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
 
-        // Draw image to canvas
-        this.canvasCtx.drawImage(
-            playerImage,
-            spritesheetData.sx,
-            spritesheetData.sy,
-            spritesheetData.sWidth,
-            spritesheetData.sHeight,
-            x + xOffset,
-            y - yOffset,
-            width,
-            height
-        );
-    }
-    else {
-        if (frameCount > 15){
-            var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
-            cycleLoopIndex++;
-            frameCount = 0;
-
-            // Draw image to canvas
-            this.canvasCtx.drawImage(
-                playerImage,
-                spritesheetData.sx,
-                spritesheetData.sy,
-                spritesheetData.sWidth,
-                spritesheetData.sHeight,
-                x + xOffset,
-                y - yOffset,
-                width,
-                height
-            );
-        }
-    }
+    // Draw image to canvas
+    this.canvasCtx.drawImage(
+        playerImage,
+        spritesheetData.sx,
+        spritesheetData.sy,
+        spritesheetData.sWidth,
+        spritesheetData.sHeight,
+        x + xOffset,
+        y - yOffset,
+        width,
+        height
+    );
 };
 
 /**
@@ -329,10 +307,16 @@ SceneManager.updateActiveScene = function(){
         SceneManager.renderScene(SceneManager.activeScene);
         SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
 
+        // reset frame count
+        if (frameCount > 15){
+            currentLoopIndex++;
+            frameCount = 0;
+        }
         // reset the loop index
         if (currentLoopIndex >= playerWalkCycleLoop.length){
             currentLoopIndex = 0;
         }
+
         requestAnimationFrame(callback);
     };
     requestAnimationFrame(callback);
