@@ -15,6 +15,26 @@ SceneManager.availableScenes = {
 SceneManager.activeScene = null;
 SceneManager.sceneStack = [];
 
+// tilemap constants;
+SceneManager.MAP_WIDTH = 10;
+SceneManager.MAP_HEIGHT = 10;
+SceneManager.TILE_WIDTH = 64;
+SceneManager.TILE_HEIGHT = 64;
+
+// first row of 16x16 tiles
+SceneManager.exampleTileMapArray = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+];
+
 // This is the canvas element
 SceneManager.canvasEl = document.getElementById("game-canvas");
 SceneManager.canvasCtx = SceneManager.canvasEl.getContext("2d");
@@ -67,14 +87,44 @@ SceneManager.renderScene = function(scene){
 
     // reset canvas
     this.canvasCtx.clearRect(0, 0, this.canvasCtx.width, this.canvasCtx.height);
-    // Load initial background
-    var background = this.canvasCtx.createLinearGradient(0, 0, 550, 550);
-    background.addColorStop(0, "blue");
-    background.addColorStop(1, "green");
 
-    // Fill with gradient
-    this.canvasCtx.fillStyle = background;
-    this.canvasCtx.fillRect(0, 0, 1000, 1000);
+    // Load initial background
+    // var background = this.canvasCtx.createLinearGradient(0, 0, 550, 550);
+    // background.addColorStop(0, "blue");
+    // background.addColorStop(1, "green");
+
+    // // Fill with gradient
+    // this.canvasCtx.fillStyle = background;
+    // this.canvasCtx.fillRect(0, 0, 1000, 1000);
+
+    var tileMapImage = document.getElementById("world-sprites");
+    for (var i = 0; i < this.MAP_WIDTH; i++){
+        for (var j = 0; j < this.MAP_HEIGHT; j++){
+            // The value of the current tile based on the tile array example
+            var index = (i * this.MAP_WIDTH) + j;
+            var xValue = SceneManager.exampleTileMapArray[index];
+
+            // setting this to 0 for now, until tileMapExample is made into 2D array
+            var yValue = 0;
+
+            // get the position coords for this tile
+            var tileY = i * this.TILE_WIDTH;
+            var tileX = j * this.TILE_HEIGHT;
+
+            // Logic for drawing tiles from map to canvas
+            SceneManager.canvasCtx.drawImage(
+                tileMapImage,
+                xValue * 16,
+                yValue * 16,
+                16,
+                16,
+                tileX,
+                tileY,
+                this.TILE_WIDTH,
+                this.TILE_HEIGHT
+            );
+        }
+    }
 
     // using the player's location, 
     // we want to figure out the segment of the map to load
