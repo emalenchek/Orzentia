@@ -16,23 +16,56 @@ SceneManager.activeScene = null;
 SceneManager.sceneStack = [];
 
 // tilemap constants;
-SceneManager.MAP_WIDTH = 10;
-SceneManager.MAP_HEIGHT = 10;
-SceneManager.TILE_WIDTH = 64;
-SceneManager.TILE_HEIGHT = 64;
+SceneManager.MAP_WIDTH = 20;
+SceneManager.MAP_HEIGHT = 20;
+SceneManager.TILE_WIDTH = 50;
+SceneManager.TILE_HEIGHT = 50;
 
 // first row of 16x16 tiles
-SceneManager.exampleTileMapArray = [
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+SceneManager.backgroundTileMapArray = [
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0]
+];
+
+SceneManager.foregroundTileMapArray = [
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [6,0], [7,0], [8,0], [9,0], [10,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [6,1], [7,1], [8,1], [9,1], [10,1], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [6,2], [7,2], [8,2], [9,2], [10,2], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [6,3], [7,3], [8,3], [9,3], [10,3], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [6,4], [7,4], [8,4], [9,4], [10,4], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0]
 ];
 
 // This is the canvas element
@@ -43,8 +76,8 @@ SceneManager.playerSpritesheet = document.getElementById("player-sprites");
 
 var FPS = 30;
 var FRAME_MIN_TIME = (1000/60) * (60 / FPS) - (1000/60) * 0.5;
-var PLAYER_WIDTH = 25;
-var PLAYER_HEIGHT = 25;
+var PLAYER_WIDTH = 32;
+var PLAYER_HEIGHT = 32;
 var PLAYER_COLOR = "rgb(200, 0, 0)";
 
 // methods //
@@ -77,6 +110,74 @@ SceneManager.loadScene = function(newScene){
 };
 
 /**
+ * Renders the background textures from the tilemap to the context
+ */
+SceneManager.renderBackgroundTilemapToContext = function(){
+    var tileMapImage = document.getElementById("world-sprites");
+    for (var i = 0; i < this.MAP_WIDTH; i++){
+        for (var j = 0; j < this.MAP_HEIGHT; j++){
+            // The value of the current tile based on the tile array example
+            var index = (i * this.MAP_WIDTH) + j;
+            var xValue = SceneManager.backgroundTileMapArray[index][0];
+
+            // setting this to 0 for now, until tileMapExample is made into 2D array
+            var yValue = SceneManager.backgroundTileMapArray[index][1];
+
+            // get the position coords for this tile
+            var tileY = i * this.TILE_WIDTH;
+            var tileX = j * this.TILE_HEIGHT;
+
+            // Logic for drawing tiles from map to canvas
+            SceneManager.canvasCtx.drawImage(
+                tileMapImage,
+                xValue * 16,
+                yValue * 16,
+                16,
+                16,
+                tileX,
+                tileY,
+                this.TILE_WIDTH,
+                this.TILE_HEIGHT
+            );
+        }
+    }
+};
+
+/**
+ * Render the foreground textures from the tilemap to the context
+ */
+SceneManager.renderForegroundTilemapToContext = function(){
+    var tileMapImage = document.getElementById("world-sprites");
+    for (var i = 0; i < this.MAP_WIDTH; i++){
+        for (var j = 0; j < this.MAP_HEIGHT; j++){
+            // The value of the current tile based on the tile array example
+            var index = (i * this.MAP_WIDTH) + j;
+            var xValue = SceneManager.foregroundTileMapArray[index][0];
+
+            // setting this to 0 for now, until tileMapExample is made into 2D array
+            var yValue = SceneManager.foregroundTileMapArray[index][1];
+
+            // get the position coords for this tile
+            var tileY = i * this.TILE_WIDTH;
+            var tileX = j * this.TILE_HEIGHT;
+
+            // Logic for drawing tiles from map to canvas
+            SceneManager.canvasCtx.drawImage(
+                tileMapImage,
+                xValue * 16,
+                yValue * 16,
+                16,
+                16,
+                tileX,
+                tileY,
+                this.TILE_WIDTH,
+                this.TILE_HEIGHT
+            );
+        }
+    }
+};
+
+/**
  * Renders the scene object to the screen
  * @param {Scene} scene - scene object to be rendered 
  */
@@ -97,34 +198,8 @@ SceneManager.renderScene = function(scene){
     // this.canvasCtx.fillStyle = background;
     // this.canvasCtx.fillRect(0, 0, 1000, 1000);
 
-    var tileMapImage = document.getElementById("world-sprites");
-    for (var i = 0; i < this.MAP_WIDTH; i++){
-        for (var j = 0; j < this.MAP_HEIGHT; j++){
-            // The value of the current tile based on the tile array example
-            var index = (i * this.MAP_WIDTH) + j;
-            var xValue = SceneManager.exampleTileMapArray[index];
-
-            // setting this to 0 for now, until tileMapExample is made into 2D array
-            var yValue = 0;
-
-            // get the position coords for this tile
-            var tileY = i * this.TILE_WIDTH;
-            var tileX = j * this.TILE_HEIGHT;
-
-            // Logic for drawing tiles from map to canvas
-            SceneManager.canvasCtx.drawImage(
-                tileMapImage,
-                xValue * 16,
-                yValue * 16,
-                16,
-                16,
-                tileX,
-                tileY,
-                this.TILE_WIDTH,
-                this.TILE_HEIGHT
-            );
-        }
-    }
+    SceneManager.renderBackgroundTilemapToContext();
+    SceneManager.renderForegroundTilemapToContext();
 
     // using the player's location, 
     // we want to figure out the segment of the map to load
