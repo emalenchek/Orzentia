@@ -245,7 +245,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
 /**
  * A method that loads the player character onto the scene
  */
-SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex){
+SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, frameCount){
     // for now the player is just a square, 
     // and we want to center the character
 
@@ -264,20 +264,43 @@ SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex){
     var playerImage = document.getElementById("player-sprites");
 
     // Get the correct sprite data
-    var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
 
-    // Draw image to canvas
-    this.canvasCtx.drawImage(
-        playerImage,
-        spritesheetData.sx,
-        spritesheetData.sy,
-        spritesheetData.sWidth,
-        spritesheetData.sHeight,
-        x + xOffset,
-        y - yOffset,
-        width,
-        height
-    );
+    if (!cycleLoop && !cycleLoopIndex && !frameCount){
+        var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
+
+        // Draw image to canvas
+        this.canvasCtx.drawImage(
+            playerImage,
+            spritesheetData.sx,
+            spritesheetData.sy,
+            spritesheetData.sWidth,
+            spritesheetData.sHeight,
+            x + xOffset,
+            y - yOffset,
+            width,
+            height
+        );
+    }
+    else {
+        if (frameCount > 15){
+            var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
+            cycleLoopIndex++;
+            frameCount = 0;
+
+            // Draw image to canvas
+            this.canvasCtx.drawImage(
+                playerImage,
+                spritesheetData.sx,
+                spritesheetData.sy,
+                spritesheetData.sWidth,
+                spritesheetData.sHeight,
+                x + xOffset,
+                y - yOffset,
+                width,
+                height
+            );
+        }
+    }
 };
 
 /**
@@ -288,24 +311,23 @@ SceneManager.updateActiveScene = function(){
     var playerWalkCycleLoop = [1,0,2,0];
     var currentLoopIndex = 0;
     var frameCount = 0;
+    var lastFrameTime = 0;
 
     var callback = function(time){
         frameCount++;
-        if (frameCount <= 10 && frameCount !== 0){
+        if (time - lastFrameTime < FRAME_MIN_TIME){
             requestAnimationFrame(callback);
             return;
         }
-        frameCount = 1;
+        lastFrameTime = time;
 
+        // update player's location if necessary
         if (GameState.activeKeys.length){
             GameState.updatePlayerLocation();
         }
 
         SceneManager.renderScene(SceneManager.activeScene);
-
-        frameCount++;
-        SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex);
-        currentLoopIndex++;
+        SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
 
         // reset the loop index
         if (currentLoopIndex >= playerWalkCycleLoop.length){
