@@ -146,11 +146,18 @@ GameState.isLocationAvailable = function(newLocation){
 
     var arrayIndex = (tileXIndex * SceneManager.MAP_WIDTH) + tileYIndex;
 
-    // check to see if collision is set here
+    // check to see if collision is set at this location - foreground tilemap
     if (SceneManager.foregroundTileMapArray[arrayIndex].length > 2){
         if (SceneManager.foregroundTileMapArray[arrayIndex][2] === 1){
             console.log("Movement blocked");
-            console.log("X:" + trueX, "Y:" + trueY);
+            return false;
+        }
+    }
+
+    // check to see if collision is set at this location - background tilemap
+    if (SceneManager.backgroundTileMapArray[arrayIndex].length > 2){
+        if (SceneManager.backgroundTileMapArray[arrayIndex][2] === 1){
+            console.log("Movement blocked");
             return false;
         }
     }
