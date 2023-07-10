@@ -44,6 +44,9 @@ GameState.newStateTemplate = {
 GameState.currentState = null;
 GameState.activeKeys = [];
 
+/**
+ * On load of game, create new game state
+ */
 GameState.createNewGameState = function(){
     // create a copy of the new state template
     var state = JSON.parse(JSON.stringify(GameState.newStateTemplate));
@@ -54,28 +57,65 @@ GameState.createNewGameState = function(){
     SceneManager.updateActiveScene();
 };
 
+/**
+ * If movement is requested (and not inhibited by collision)
+ * updates character's location within the current game state
+ * (based on character's speed)
+ */
 GameState.updatePlayerLocation = function(){
     GameState.activeKeys.map(function(key){
         switch (key){
             case "ArrowUp":
-                // move character up
-                GameState.currentState.player.location.y +=
+                // need to peek at new location to see if available
+                var newLocation = {
+                    "x": GameState.currentState.player.location.x,
+                    "y": GameState.currentState.player.location.y +
+                        GameState.currentState.player.speed
+                };
+                if (GameState.isLocationAvailable(newLocation)){
+                    // move character up
+                    GameState.currentState.player.location.y +=
                     GameState.currentState.player.speed;
+                }
                 break;
             case "ArrowDown":
-                // move character up
-                GameState.currentState.player.location.y -=
-                    GameState.currentState.player.speed;
+                // need to peek at new location to see if available
+                var newLocation = {
+                    "x": GameState.currentState.player.location.x,
+                    "y": GameState.currentState.player.location.y -
+                        GameState.currentState.player.speed
+                };
+                if (GameState.isLocationAvailable(newLocation)){
+                    // move character down
+                    GameState.currentState.player.location.y -=
+                        GameState.currentState.player.speed;
+                }
                 break;
             case "ArrowRight":
-                // move character up
-                GameState.currentState.player.location.x +=
-                    GameState.currentState.player.speed;
+                // need to peek at new location to see if available
+                var newLocation = {
+                    "x": GameState.currentState.player.location.x +
+                        GameState.currentState.player.speed,
+                    "y": GameState.currentState.player.location.y
+                };
+                if (GameState.isLocationAvailable(newLocation)){
+                    // move character right
+                    GameState.currentState.player.location.x +=
+                        GameState.currentState.player.speed;
+                }
                 break;
             case "ArrowLeft":
-                // move character up
-                GameState.currentState.player.location.x -=
-                    GameState.currentState.player.speed;
+                // need to peek at new location to see if available
+                var newLocation = {
+                    "x": GameState.currentState.player.location.x -
+                        GameState.currentState.player.speed,
+                    "y": GameState.currentState.player.location.y
+                };
+                if (GameState.isLocationAvailable(newLocation)){
+                    // move character left
+                    GameState.currentState.player.location.x -=
+                        GameState.currentState.player.speed;
+                }
                 break;
             default:
                 break;
@@ -83,3 +123,36 @@ GameState.updatePlayerLocation = function(){
         return;
     })
 };
+
+/**
+ * Checks the foreground tilemap to see if the intended location is available
+ */
+GameState.isLocationAvailable = function(newLocation){
+    var x = newLocation.x;
+    var y = newLocation.y
+
+    // x coordinate of player (need to subtract half the width as an offset to truly center)
+    var xCalc = (SceneManager.canvasEl.width / 2) - (SceneManager.PLAYER_WIDTH / 2);
+    // y coordinate of player (need to subtract half the height as an offset to truly center)
+    var yCalc = (SceneManager.canvasEl.height / 2) - (SceneManager.PLAYER_HEIGHT / 2);
+
+    // use player location as offset (and the offset based on canvas size) to get trueX and trueY
+    var trueX = (xCalc + x) - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
+    var trueY = (yCalc - y) + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / 100)) + SceneManager.TILE_HEIGHT;
+
+    // ignore the remainder, as this should check the whole area associated with new location
+    var tileXIndex = Math.floor(trueX / SceneManager.TILE_WIDTH);
+    var tileYIndex = Math.floor(trueY / SceneManager.TILE_HEIGHT);
+
+    var arrayIndex = (tileXIndex * SceneManager.MAP_WIDTH) + tileYIndex;
+
+    // check to see if collision is set here
+    if (SceneManager.foregroundTileMapArray[arrayIndex].length > 2){
+        if (SceneManager.foregroundTileMapArray[arrayIndex][2] === 1){
+            console.log("Movement blocked");
+            console.log("X:" + trueX, "Y:" + trueY);
+            return false;
+        }
+    }
+    return true;
+}

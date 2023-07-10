@@ -21,7 +21,14 @@ SceneManager.MAP_HEIGHT = 20;
 SceneManager.TILE_WIDTH = 50;
 SceneManager.TILE_HEIGHT = 50;
 
-// first row of 16x16 tiles
+// {x, y, z}
+// x: row tilemap value
+// y: col tilemap value
+// z: collision on
+
+// collision value reference
+// z === 0: collision off
+// z === 1: collision on
 SceneManager.backgroundTileMapArray = [
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
@@ -45,16 +52,24 @@ SceneManager.backgroundTileMapArray = [
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0]
 ];
 
+// {x, y, z}
+// x: row tilemap value
+// y: col tilemap value
+// z: collision on
+
+// collision value reference
+// z === 0: collision off
+// z === 1: collision on
 SceneManager.foregroundTileMapArray = [
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
-    [0,0], [0,0], [0,0], [0,0], [0,0], [6,0], [7,0], [8,0], [9,0], [10,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
-    [0,0], [0,0], [0,0], [0,0], [0,0], [6,1], [7,1], [8,1], [9,1], [10,1], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
-    [0,0], [0,0], [0,0], [0,0], [0,0], [6,2], [7,2], [8,2], [9,2], [10,2], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
-    [0,0], [0,0], [0,0], [0,0], [0,0], [6,3], [7,3], [8,3], [9,3], [10,3], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
-    [0,0], [0,0], [0,0], [0,0], [0,0], [6,4], [7,4], [8,4], [9,4], [10,4], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [6,0,1], [7,0,1], [8,0,1], [9,0,1], [10,0,1], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [6,1,1], [7,1,1], [8,1,1], [9,1,1], [10,1,1], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [6,2,1], [7,2,1], [8,2,1], [9,2,1], [10,2,1], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [6,3,1], [7,3,1], [8,3,1], [9,3,1], [10,3,1], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
+    [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [6,4,1], [7,4,1], [8,4,1], [9,4,1], [10,4,1], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
     [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0],
@@ -76,8 +91,8 @@ SceneManager.playerSpritesheet = document.getElementById("player-sprites");
 
 var FPS = 30;
 var FRAME_MIN_TIME = (1000/60) * (60 / FPS) - (1000/60) * 0.5;
-var PLAYER_WIDTH = 32;
-var PLAYER_HEIGHT = 32;
+SceneManager.PLAYER_WIDTH = 32;
+SceneManager.PLAYER_HEIGHT = 32;
 var PLAYER_COLOR = "rgb(200, 0, 0)";
 
 // methods //
@@ -188,15 +203,6 @@ SceneManager.renderScene = function(scene){
 
     // reset canvas
     this.canvasCtx.clearRect(0, 0, this.canvasCtx.width, this.canvasCtx.height);
-
-    // Load initial background
-    // var background = this.canvasCtx.createLinearGradient(0, 0, 550, 550);
-    // background.addColorStop(0, "blue");
-    // background.addColorStop(1, "green");
-
-    // // Fill with gradient
-    // this.canvasCtx.fillStyle = background;
-    // this.canvasCtx.fillRect(0, 0, 1000, 1000);
 
     SceneManager.renderBackgroundTilemapToContext();
     SceneManager.renderForegroundTilemapToContext();
@@ -325,13 +331,13 @@ SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, frameCount){
     // and we want to center the character
 
     // player width
-    var width = PLAYER_WIDTH;
-    var height = PLAYER_HEIGHT;
+    var width = SceneManager.PLAYER_WIDTH;
+    var height = SceneManager.PLAYER_HEIGHT;
 
     // x coordinate of player (need to subtract half the width as an offset to truly center)
-    var x = (this.canvasEl.width / 2) - (PLAYER_WIDTH / 2);
+    var x = (this.canvasEl.width / 2) - (SceneManager.PLAYER_WIDTH / 2);
     // y coordinate of player (need to subtract half the height as an offset to truly center)
-    var y = (this.canvasEl.height / 2) - (PLAYER_HEIGHT / 2);
+    var y = (this.canvasEl.height / 2) - (SceneManager.PLAYER_HEIGHT / 2);
 
     var xOffset = GameState.currentState.player.location.x;
     var yOffset = GameState.currentState.player.location.y;
