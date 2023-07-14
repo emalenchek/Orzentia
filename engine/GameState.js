@@ -298,16 +298,61 @@ GameState.updateActiveAttack = function(attack){
 
         switch (direction){
             case "N":
-                attack.currentLocation.y += speed;
+                var newLocation = {
+                    "x": attack.currentLocation.x,
+                    "y": attack.currentLocation.y + speed + (SceneManager.TILE_HEIGHT)
+                };
+
+                // check for terrain collision
+                if (GameState.isLocationAvailable(newLocation)){
+                    attack.currentLocation.y += speed;
+                }
+                else {
+                    // despawn this attack
+                    GameState.despawnActiveAttack(attack);
+                }
                 break;
             case "S":
-                attack.currentLocation.y -= speed;
+                var newLocation = {
+                    "x": attack.currentLocation.x,
+                    "y": attack.currentLocation.y - speed - (SceneManager.TILE_HEIGHT)
+                };
+                // check for terrain collision
+                if (GameState.isLocationAvailable(newLocation)){
+                    attack.currentLocation.y -= speed;
+                }
+                else {
+                    // despawn this attack
+                    GameState.despawnActiveAttack(attack);
+                }
                 break;
             case "W":
-                attack.currentLocation.x -= speed;
+                var newLocation = {
+                    "x": attack.currentLocation.x - speed - (SceneManager.TILE_WIDTH),
+                    "y": attack.currentLocation.y
+                };
+                // check for terrain collision
+                if (GameState.isLocationAvailable(newLocation)){
+                    attack.currentLocation.x -= speed;
+                }
+                else {
+                    // despawn this attack
+                    GameState.despawnActiveAttack(attack);
+                }
                 break;
             case "E":
-                attack.currentLocation.x += speed;
+                var newLocation = {
+                    "x": attack.currentLocation.x + speed + (SceneManager.TILE_WIDTH),
+                    "y": attack.currentLocation.y
+                };
+                // check for terrain collision
+                if (GameState.isLocationAvailable(newLocation)){
+                    attack.currentLocation.x += speed;
+                }
+                else {
+                    // despawn this attack
+                    GameState.despawnActiveAttack(attack);
+                }
                 break;
         }
 
@@ -329,16 +374,24 @@ GameState.updateActiveAttack = function(attack){
             (Math.abs(currentX - originX) > (SceneManager.CANVAS_WIDTH / 2)) ||
             (Math.abs(currentY - originY) > (SceneManager.CANVAS_HEIGHT / 2)) 
         ){
-            // need to despawn this action
-            // or remove from activeAction list
-            GameState.currentState.activeAttacks.splice(attack.index, 1);
-            // reindex the activeAttacks list
-            GameState.currentState.activeAttacks.map(function(attack, index){
-                if (attack.index > index){
-                    attack.index = index;
-                }
-                return;
-            })
+            GameState.despawnActiveAttack(attack);
         }
     }
+};
+
+/**
+ * Despawns an active attack, and reindexes the activeAttacks list
+ * @param {Object} attack - active attack to be despawned
+ */
+GameState.despawnActiveAttack = function(attack){
+    // need to despawn this action
+    // or remove from activeAction list
+    GameState.currentState.activeAttacks.splice(attack.index, 1);
+    // reindex the activeAttacks list
+    GameState.currentState.activeAttacks.map(function(attack, index){
+        if (attack.index > index){
+            attack.index = index;
+        }
+        return;
+    });
 };
