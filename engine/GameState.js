@@ -5,6 +5,29 @@
 // initialize game state object
 var GameState = {};
 
+GameState.exampleEnemy = {
+    "name": "Red Slime",
+    "type": "monster",
+    "health": 5,
+    "experienceYield": 10,
+    "spritesheet": "./assets/spritesheets/slime_monster_spritesheet.png",
+    "spriteIndex": 6,
+    "spriteIndexArrayLength": 8,
+    // dectates enemy movement patterm
+    // idle (stationary), aggressive (moves towards the player), etc.
+    "movementType": "idle",
+    "speed": 2,
+    // location on the canvas
+    "location": {
+        x: 120,
+        y: 120
+    },
+    "spriteWidth": 24,
+    "spriteHeight": 24,
+    "width": 48,
+    "height": 48
+};
+
 GameState.newStateTemplate = {
     "start": null,
     "end": null,
@@ -54,7 +77,8 @@ GameState.newStateTemplate = {
     },
     // changes can and will happen to player data in an active game state
     "isActive": false,
-    "activeAttacks": []
+    "activeAttacks": [],
+    "spawnedEnemies": [] 
 };
 
 GameState.currentState = null;
@@ -274,6 +298,7 @@ GameState.playerActions.fireMagicProjectile = function(spell){
         "type": "projectile",
         "description": "player magic projectile",
         "sprites": spell.sprites,
+        "damage": spell.damage,
         "spriteIndex": 0,
         "originLocation": JSON.parse(JSON.stringify(spellLocation)),
         "currentLocation": JSON.parse(JSON.stringify(spellLocation)),
@@ -395,3 +420,97 @@ GameState.despawnActiveAttack = function(attack){
         return;
     });
 };
+
+/**
+ * Spawns a new enemy, and adds it to the current game state
+ */
+GameState.spawnEnemy = function(enemyObject){
+    // Similarly, to despawn, may want to a spawning enemy
+    // to toggle hitbox on after a "spawn animation"
+    var length = GameState.currentState.spawnedEnemies;
+    enemyObject.index = length;
+    GameState.currentState.spawnedEnemies.push(enemyObject);
+};
+
+/**
+ * Despawns an active enemy, and removes it from the list of spawnedEnemies
+ * @param {Object} enemy - enemy within spawnedEnemies list to be despawned
+ */
+GameState.despawnActiveEnemy = function(enemy){
+    // TODO:
+    // May want to adjust this to flag enemies for despawn,
+    // so that we may render a "defeat/despawning" animation to the user
+    // But, for now we can just delete the Enemy
+    GameState.currentState.spawnedEnemies.splice(enemy.index, 1);
+    // reindex the spawnedEnemies list
+    GameState.currentState.spawnedEnemies.map(function(enemy, index){
+        if (enemy.index > index){
+            enemy.index = index;
+        }
+        return;
+    });
+};
+
+/**
+ * Make updates to the active enemy object
+ * @param {*} enemy - enemy to be updated
+ */
+GameState.updateActiveEnemy = function(enemy){
+    // will want to have some pathfinding algorithm for moving enemies
+    // ex. movementType === "agressive", need algorithm to find shortest path to the player
+    // enemy.spriteIndex++;
+    // if (enemy.spriteIndex >= enemy.spriteIndexArrayLength){
+    //     enemy.spriteIndex = 0;
+    // }
+};
+
+/**
+ * Determine whether an active attack impacted an enemy on this frame
+ * Checks list of activeAttacks and spawnedEnemies
+ */
+GameState.checkAttackEnemyCollision = function(){
+    var activeAttacks = GameState.currentState.activeAttacks;
+    var activeEnemies = GameState.currentState.spawnedEnemies;
+
+    // We want to check every attack's location against
+    // every active enemy
+    for (var i in activeAttacks){
+        for (var j in activeEnemies){
+            var attack = activeAttacks[i];
+            var enemy = activeEnemies[j];
+
+            // need to adjust the attack location, as not based off the canvas
+            var attackLocation = SceneManager.getTrueLocation(
+                attack.currentLocation.x,
+                attack.currentLocation.y
+            );
+
+            // collision check
+            var hit = attackLocation.x + attack.width >= enemy.location.x &&
+                enemy.location.x + enemy.width >= attackLocation.x &&
+                attackLocation.y + attack.height >= enemy.location.y &&
+                enemy.location.y + enemy.height >= attackLocation.y;
+            
+
+            
+            if (hit){
+                GameState.calculateEnemyDamage(attack, enemy);
+                GameState.despawnActiveAttack(attack);
+                console.log("hit!");
+            }
+        }
+    }
+};
+
+/**
+ * 
+ * @param {*} attack - The attack being delivered to the enemy target
+ * @param {*} enemy - The recipient of the attack
+ */
+GameState.calculateEnemyDamage = function(attack, enemy){
+    // simple calculation for now
+    enemy.health -= attack.damage;
+    if (enemy.health <= 0){
+        GameState.despawnActiveEnemy(enemy);
+    }
+}

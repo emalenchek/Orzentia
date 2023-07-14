@@ -410,8 +410,16 @@ SceneManager.updateActiveScene = function(){
         SceneManager.renderScene(SceneManager.activeScene);
         SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
 
+        // Need to check to see if any attacks to be rendered
+        // will make contact with an enemy 
+        GameState.checkAttackEnemyCollision()
+
+        // Need to render all enemies onto the screen
+        SceneManager.renderEnemies();
+
         // Need to render all projectiles
         SceneManager.renderAttackAnimations();
+
 
         // reset frame count
         if (frameCount > 5){
@@ -507,6 +515,38 @@ SceneManager.renderAttackAnimations = function(){
                 // do nothing
                 // may want to just render a red block or something
             }
+        }
+    }
+};
+
+/**
+ * Render all spawned enemies to the screen
+ */
+SceneManager.renderEnemies = function(){
+    if (GameState.currentState.spawnedEnemies.length > 0){
+        // render each enemy to the canvas
+        for (var i in GameState.currentState.spawnedEnemies){
+            var enemy = GameState.currentState.spawnedEnemies[i];
+            var spritesheetPath = enemy.spritesheet;
+
+            var enemySprite = new Image();
+            enemySprite.src = spritesheetPath;
+
+            this.canvasCtx.drawImage(
+                enemySprite,
+                // x position spritesheet
+                (enemy.spriteIndex % 3) * enemy.spriteWidth,
+                // y position spritesheet
+                (enemy.spriteIndex / 3) * enemy.spriteHeight,
+                enemy.spriteWidth,
+                enemy.spriteHeight,
+                enemy.location.x,
+                enemy.location.y,
+                enemy.width,
+                enemy.height
+            );
+
+            GameState.updateActiveEnemy(enemy);
         }
     }
 };
