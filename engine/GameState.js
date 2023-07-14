@@ -185,9 +185,11 @@ GameState.isLocationAvailable = function(newLocation){
 
     var arrayIndex = (tileXIndex * SceneManager.MAP_WIDTH) + tileYIndex;
 
-    // FIXME: don't have a way to handle negative indices
+    // FIXME: don't have a way to handle negative indices, or those above expected index
     // may just only use positive canvas values though
-    if (arrayIndex >= 0){
+    if (arrayIndex >= 0 &&
+        arrayIndex < Math.sqrt(SceneManager.MAP_WIDTH) &&
+        arrayIndex < Math.sqrt(SceneManager.MAP_HEIGHT)){
         // check to see if collision is set at this location - foreground tilemap
         if (SceneManager.foregroundTileMapArray[arrayIndex].length > 2){
             if (SceneManager.foregroundTileMapArray[arrayIndex][2] === 1){
