@@ -16,6 +16,8 @@ SceneManager.activeScene = null;
 SceneManager.sceneStack = [];
 
 // tilemap constants;
+SceneManager.CANVAS_WIDTH = 500;
+SceneManager.CANVAS_HEIGHT = 500;
 SceneManager.MAP_WIDTH = 20;
 SceneManager.MAP_HEIGHT = 20;
 SceneManager.TILE_WIDTH = 50;

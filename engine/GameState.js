@@ -274,8 +274,8 @@ GameState.playerActions.fireMagicProjectile = function(spell){
         "description": "player magic projectile",
         "sprites": spell.sprites,
         "spriteIndex": 0,
-        "originLocation": spellLocation,
-        "currentLocation": spellLocation,
+        "originLocation": JSON.parse(JSON.stringify(spellLocation)),
+        "currentLocation": JSON.parse(JSON.stringify(spellLocation)),
         "orientation": playerOrientation,
         "speed": speed,
         "width": spell.width,
@@ -316,6 +316,21 @@ GameState.updateActiveAttack = function(attack){
             if (attack.spriteIndex >= attack.sprites.length){
                 attack.spriteIndex = 0;
             }
+        }
+
+        var originX = attack.originLocation.x;
+        var originY = attack.originLocation.y;
+        var currentX = attack.currentLocation.x;
+        var currentY = attack.currentLocation.y;
+
+        // if projectile has traveled half of the screen's width/height
+        if (
+            (Math.abs(currentX - originX) > (SceneManager.CANVAS_WIDTH / 2)) ||
+            (Math.abs(currentY - originY) > (SceneManager.CANVAS_HEIGHT / 2)) 
+        ){
+            // need to despawn this action
+            // or remove from activeAction list
+            GameState.currentState.activeAttacks.splice(attack.index, 1);
         }
     }
 };
