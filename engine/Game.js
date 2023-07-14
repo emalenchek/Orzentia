@@ -25,10 +25,27 @@ Game.setInputHandlers = function(){
     window.addEventListener("keydown", function(event){
         event.preventDefault();
         switch(event.key){
+            // move up
             case "ArrowUp":
+            // move down
             case "ArrowDown":
+            // move left
             case "ArrowLeft":
+            // move right
             case "ArrowRight":
+            // Interact (Talk/Press/etc.)
+            case "f":
+            case "F":
+            // light attack
+            // simple slash (horizontal-arc)
+            case "z":
+            case "Z":
+            // heavy attack (spin-attack) slower
+            case "x":
+            case "X":
+            // magic attack
+            case "c":
+            case "C":
                 var length = GameState.activeKeys.filter(function(key){
                     return key === event.key;
                 }).length;

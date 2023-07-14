@@ -33,8 +33,19 @@ GameState.newStateTemplate = {
         },
         // N,S,E,W (direction being faced)
         "orientation": "S",
-        "spritesheetSource": "./assets/spritesheets/Green-Cap-Character-16x18.png",
-
+        "spritesheetSource": "../assets/spritesheets/Green-Cap-Character-16x18.png",
+        // unsure on the name for now, but it sounds pretty swag
+        "incarnate": {
+            "school": "fire",
+            "type": "projectile",
+            "damage": 5,
+            "speed": 5,
+            // this will eventually be a full spritesheet
+            "sprites": [
+                "../assets/spells/fireball/Fireball1.png",
+                "../assets/spells/fireball/Fireball2.png"
+            ]  
+        }
         //, ... much more probably
     },
     // changes can and will happen to player data in an active game state
@@ -117,6 +128,29 @@ GameState.updatePlayerLocation = function(){
                         GameState.currentState.player.speed;
                 }
                 break;
+            case "f":
+            case "F":
+                // interact with npcs/push buttons/etc.
+                break;
+            case "z":
+            case "Z":
+                // light attack (horizontal arc) for now
+                break;
+            case "X":
+            case "x":
+                // Heavy (spin attack) w/ slow start time (several frames) and recovery time
+                // if holding a direction, player will spin in direction 
+                // (scalar? * playerSpeed + current location)
+                break;
+            case "c":
+            case "C":
+                // may need to inhibit player movement for a few frames after firing
+                // to do so, will try resetting activeKeys
+                GameState.activeKeys = [];
+
+                // Magic attack (will start with a fired projectile in direction character is facing).
+                GameState.playerActions.castMagic();
+                break;
             default:
                 break;
         }
@@ -163,3 +197,24 @@ GameState.isLocationAvailable = function(newLocation){
     }
     return true;
 }
+
+GameState.playerActions = {};
+
+/**
+ * Performs the player's equipped incarnate magic on key press
+ */
+GameState.playerActions.castMagic = function(){
+    var spell = GameState.currentState.player.incarnate;
+    if (spell.type === "projectile"){
+        GameState.playerActions.fireMagicProjectile(spell);
+    }
+};
+
+/**
+ * Renders a projectile in front of the player
+ * (in the direction player is facing), and fires the projectile and 
+ * @param {Object} spell - the spell to be cast and transformed into a projectile
+ */
+GameState.playerActions.fireMagicProjectile = function(spell){
+    console.log(spell);
+};
