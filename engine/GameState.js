@@ -180,19 +180,23 @@ GameState.isLocationAvailable = function(newLocation){
 
     var arrayIndex = (tileXIndex * SceneManager.MAP_WIDTH) + tileYIndex;
 
-    // check to see if collision is set at this location - foreground tilemap
-    if (SceneManager.foregroundTileMapArray[arrayIndex].length > 2){
-        if (SceneManager.foregroundTileMapArray[arrayIndex][2] === 1){
-            console.log("Movement blocked");
-            return false;
+    // FIXME: don't have a way to handle negative indices
+    // may just only use positive canvas values though
+    if (arrayIndex >= 0){
+        // check to see if collision is set at this location - foreground tilemap
+        if (SceneManager.foregroundTileMapArray[arrayIndex].length > 2){
+            if (SceneManager.foregroundTileMapArray[arrayIndex][2] === 1){
+                console.log("Movement blocked");
+                return false;
+            }
         }
-    }
 
-    // check to see if collision is set at this location - background tilemap
-    if (SceneManager.backgroundTileMapArray[arrayIndex].length > 2){
-        if (SceneManager.backgroundTileMapArray[arrayIndex][2] === 1){
-            console.log("Movement blocked");
-            return false;
+        // check to see if collision is set at this location - background tilemap
+        if (SceneManager.backgroundTileMapArray[arrayIndex].length > 2){
+            if (SceneManager.backgroundTileMapArray[arrayIndex][2] === 1){
+                console.log("Movement blocked");
+                return false;
+            }
         }
     }
     return true;
