@@ -220,6 +220,26 @@ SceneManager.renderScene = function(scene){
 };
 
 /**
+ * Get the actual coordinates with the player's true location value
+ */
+SceneManager.getTrueLocation = function(x, y){
+    if (!x){
+        x = 0;
+    }
+    if (!y){
+        y = 0;
+    }
+    // x coordinate of player (need to subtract half the width as an offset to truly center)
+    var trueX = (this.canvasEl.width / 2) - (SceneManager.PLAYER_WIDTH / 2);
+    // y coordinate of player (need to subtract half the height as an offset to truly center)
+    var trueY = (this.canvasEl.height / 2) - (SceneManager.PLAYER_HEIGHT / 2);
+    return {
+        "x": trueX + x,
+        "y": trueY - y
+    };
+}
+
+/**
  * Gets the rotation value for the player's orientation
  * Based on cardinal direction
  */
@@ -388,6 +408,9 @@ SceneManager.updateActiveScene = function(){
         SceneManager.renderScene(SceneManager.activeScene);
         SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
 
+        // Need to render all projectiles
+        SceneManager.renderAttackAnimations();
+
         // reset frame count
         if (frameCount > 5){
             currentLoopIndex++;
@@ -410,4 +433,78 @@ SceneManager.removeTopScene = function(){
     var lastSceneIndex = SceneManager.sceneStack.length;
     SceneManager.sceneStack.pop();
     SceneManager.activeScene = SceneManager.sceneStack[lastSceneIndex];
+};
+
+/**
+ * Renders all active attack animations to the screen
+ */
+SceneManager.renderAttackAnimations = function(){
+    if (GameState.currentState.activeAttacks.length){
+        // need to render any and all active attack animations
+        var activeAttacks = GameState.currentState.activeAttacks;
+        for (var i in activeAttacks){
+            var attack = activeAttacks[i];
+            
+            // get true canvas location of the attack
+            var trueLocation = SceneManager.getTrueLocation(
+                attack.currentLocation.x, attack.currentLocation.y
+            );
+            var x = trueLocation.x;
+            var y = trueLocation.y;
+
+            if (attack.sprites){
+                var activeSprite = attack.sprites[attack.spriteIndex];
+
+                // setup image
+                var spriteImage = new Image();
+                spriteImage.src = activeSprite;
+
+                var degreeRotation = 0;
+                var posX = (attack.width / 2);
+                var posY = 0;
+                // rotate image if necessary
+                switch (attack.orientation){
+                    case "N":
+                        degreeRotation = 270;
+                        posX = -(attack.height / 2);
+                        break;
+                    case "W":
+                        degreeRotation = 180;
+                        posY = -(attack.width);
+                        posX = -(attack.height / 2);
+                        break;
+                    case "S":
+                        degreeRotation = 90;
+                        posY = -(attack.width);
+                        posX = (attack.height / 2);
+                        break;
+                    default:
+                        break;
+                }
+            
+                // need to rotate the whole context apparently
+                this.canvasCtx.save();
+                this.canvasCtx.translate(x, y);
+                this.canvasCtx.rotate(degreeRotation * Math.PI / 180);
+
+                // Draw image to canvas
+                this.canvasCtx.drawImage(
+                    spriteImage,
+                    posX,
+                    posY,
+                    attack.width,
+                    attack.height
+                );
+
+                this.canvasCtx.restore();
+
+                // need to update location of projectile
+                GameState.updateActiveAttack(attack);
+            }
+            else {
+                // do nothing
+                // may want to just render a red block or something
+            }
+        }
+    }
 };

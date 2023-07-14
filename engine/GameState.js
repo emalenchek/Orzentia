@@ -13,6 +13,8 @@ GameState.newStateTemplate = {
         // This will be where all information regarding the player is stored
         // Name, Health, Level(?), inventory, equipped, spells/abilities, etc.
         "health": 50,
+        "width": 32,
+        "height": 32,
         "level": 1,
         "experience": 0,
         "inventory": [],
@@ -33,23 +35,26 @@ GameState.newStateTemplate = {
         },
         // N,S,E,W (direction being faced)
         "orientation": "S",
-        "spritesheetSource": "../assets/spritesheets/Green-Cap-Character-16x18.png",
+        "spritesheetSource": "./assets/spritesheets/Green-Cap-Character-16x18.png",
         // unsure on the name for now, but it sounds pretty swag
         "incarnate": {
             "school": "fire",
             "type": "projectile",
             "damage": 5,
             "speed": 5,
+            "width": 64,
+            "height": 64,
             // this will eventually be a full spritesheet
             "sprites": [
-                "../assets/spells/fireball/Fireball1.png",
-                "../assets/spells/fireball/Fireball2.png"
+                "./assets/spells/fireball/Fireball1.png",
+                "./assets/spells/fireball/Fireball2.png"
             ]  
         }
         //, ... much more probably
     },
     // changes can and will happen to player data in an active game state
-    "isActive": false
+    "isActive": false,
+    "activeAttacks": []
 };
 
 GameState.currentState = null;
@@ -220,5 +225,97 @@ GameState.playerActions.castMagic = function(){
  * @param {Object} spell - the spell to be cast and transformed into a projectile
  */
 GameState.playerActions.fireMagicProjectile = function(spell){
-    console.log(spell);
+    var spellLocation;
+    var playerLocation = GameState.currentState.player.location;
+    var playerOrientation = GameState.currentState.player.orientation;
+    var speed = spell.speed;
+
+    var playerWidthOffset = (GameState.currentState.player.width / 2);
+    var playerHeightOffset = (GameState.currentState.player.height / 2);
+
+    // calculate spell origin location, and direction of travel
+    switch (playerOrientation){
+        case "N":
+            // y - speed
+            spellLocation = {
+                "x": playerLocation.x - playerWidthOffset,
+                "y": playerLocation.y + playerHeightOffset - speed
+            };
+            break;
+        case "S":
+            // y + speed
+            spellLocation = {
+                "x": playerLocation.x - playerWidthOffset,
+                "y": playerLocation.y + playerHeightOffset + speed
+            };
+            break;
+        case "W":
+            // x - speed
+            spellLocation = {
+                "x": playerLocation.x - playerWidthOffset - speed,
+                "y": playerLocation.y + playerHeightOffset
+            };
+            break;
+        case "E":
+            // x + speed
+            spellLocation = {
+                "x": playerLocation.x - playerWidthOffset + speed,
+                "y": playerLocation.y + playerHeightOffset
+            };
+            break;
+        default:
+            break;
+    }
+
+    var activeAttacks = GameState.currentState.activeAttacks;
+    var newAttack = {
+        "index": activeAttacks.length,
+        "type": "projectile",
+        "description": "player magic projectile",
+        "sprites": spell.sprites,
+        "spriteIndex": 0,
+        "originLocation": spellLocation,
+        "currentLocation": spellLocation,
+        "orientation": playerOrientation,
+        "speed": speed,
+        "width": spell.width,
+        "height": spell.height
+    };
+    activeAttacks.push(newAttack);
+};
+
+/**
+ * Updates an active attack within the game's current state
+ * @param {Object} attack - an active attack
+ */
+GameState.updateActiveAttack = function(attack){
+    // eventually want to despawn the projectile once it
+    // leaves the "camera"'s view
+    if (attack.type === "projectile"){
+        var direction = attack.orientation;
+        var speed = attack.speed;
+
+        switch (direction){
+            case "N":
+                attack.currentLocation.y += speed;
+                break;
+            case "S":
+                attack.currentLocation.y -= speed;
+                break;
+            case "W":
+                attack.currentLocation.x -= speed;
+                break;
+            case "E":
+                attack.currentLocation.x += speed;
+                break;
+        }
+
+        // need to reset the sprite index
+        if (attack.sprites){
+            attack.spriteIndex++;
+            if (attack.spriteIndex >= attack.sprites.length){
+                attack.spriteIndex = 0;
+            }
+        }
+    }
 };

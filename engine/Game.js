@@ -66,6 +66,19 @@ Game.setInputHandlers = function(){
             case "ArrowDown":
             case "ArrowLeft":
             case "ArrowRight":
+            // Interact (Talk/Press/etc.)
+            case "f":
+            case "F":
+            // light attack
+            // simple slash (horizontal-arc)
+            case "z":
+            case "Z":
+            // heavy attack (spin-attack) slower
+            case "x":
+            case "X":
+            // magic attack
+            case "c":
+            case "C":
                 GameState.activeKeys.splice(
                     GameState.activeKeys.indexOf(event.key),
                     1
