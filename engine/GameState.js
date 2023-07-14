@@ -331,6 +331,12 @@ GameState.updateActiveAttack = function(attack){
             // need to despawn this action
             // or remove from activeAction list
             GameState.currentState.activeAttacks.splice(attack.index, 1);
+            GameState.currentState.activeAttacks.map(function(attack, index){
+                if (attack.index > index){
+                    attack.index = index;
+                }
+                return;
+            })
         }
     }
 };
