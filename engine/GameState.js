@@ -125,6 +125,7 @@ GameState.updatePlayerLocation = function(){
                         // need to decrement pause menu cursor up one if possible
                         if (GUI.pauseMenuDetails.cursorIndex > 0){
                             GUI.pauseMenuDetails.cursorIndex--;
+                            GameState.activeKeys = [];
                         }
                     }
                 }
@@ -146,8 +147,9 @@ GameState.updatePlayerLocation = function(){
                     }
                     else {
                         // need to decrement pause menu cursor up one if possible
-                        if (GUI.pauseMenuDetails.cursorIndex < GUI.pauseMenuDetails.options.length){
+                        if (GUI.pauseMenuDetails.cursorIndex < GUI.pauseMenuDetails.options.length - 1){
                             GUI.pauseMenuDetails.cursorIndex++;
+                            GameState.activeKeys = [];
                         }
                     }
                 }

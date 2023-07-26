@@ -203,19 +203,21 @@ SceneManager.renderPauseMenuText = function(){
     var posY = SceneManager.TILE_HEIGHT * 2;
 
     this.canvasCtx.font = "32px " + pauseDetails.font;
-    this.canvasCtx.fillStyle = "color: " + pauseDetails.foregroundColor + ";text-style: none;";
 
     for (var i in pauseDetails.options){
-        if (i === pauseDetails.cursorIndex){
-            // underline this text to show user the active highlighted element
-            this.canvasCtx.fillStyle = pauseDetails.foregroundColor;
-        }
-        else {
-            this.canvasCtx.fillStyle = pauseDetails.foregroundColor;
-        }
+        // text style
+        this.canvasCtx.fillStyle = pauseDetails.foregroundColor;
 
         // render text
         this.canvasCtx.fillText(pauseDetails.options[i], posX, posY + (60 * Number(i)));
+
+        var textWidth = this.canvasCtx.measureText(pauseDetails.options[i]).width;
+
+        if (Number(i) === pauseDetails.cursorIndex){
+            // underline this text to show user the active highlighted element
+            this.canvasCtx.fillStyle = pauseDetails.foregroundColor;
+            this.canvasCtx.fillRect(posX, posY + (60 * Number(i)) + 10, textWidth, 2);
+        }
     }
 };
 
