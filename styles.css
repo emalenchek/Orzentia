@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "JGS-7-FONT";
+    src: url("./assets/typography/jgs-main/fonts/jgs7.ttf");
+}
+
 .container {
     width: auto;
     height: 100%;

@@ -78,7 +78,8 @@ GameState.newStateTemplate = {
     // changes can and will happen to player data in an active game state
     "isActive": false,
     "activeAttacks": [],
-    "spawnedEnemies": [] 
+    "spawnedEnemies": [],
+    "isPaused": false
 };
 
 GameState.currentState = null;
@@ -106,55 +107,83 @@ GameState.updatePlayerLocation = function(){
     GameState.activeKeys.map(function(key){
         switch (key){
             case "ArrowUp":
-                // need to peek at new location to see if available
-                var newLocation = {
-                    "x": GameState.currentState.player.location.x,
-                    "y": GameState.currentState.player.location.y +
-                        GameState.currentState.player.speed
-                };
-                if (GameState.isLocationAvailable(newLocation)){
-                    // move character up
-                    GameState.currentState.player.location.y +=
-                    GameState.currentState.player.speed;
+                if (GameState.currentState){
+                    if (!GameState.currentState.isPaused){
+                        // need to peek at new location to see if available
+                        var newLocation = {
+                            "x": GameState.currentState.player.location.x,
+                            "y": GameState.currentState.player.location.y +
+                                GameState.currentState.player.speed
+                        };
+                        if (GameState.isLocationAvailable(newLocation)){
+                            // move character up
+                            GameState.currentState.player.location.y +=
+                            GameState.currentState.player.speed;
+                        }
+                    }
+                    else {
+                        // need to decrement pause menu cursor up one if possible
+                        if (GUI.pauseMenuDetails.cursorIndex > 0){
+                            GUI.pauseMenuDetails.cursorIndex--;
+                        }
+                    }
                 }
                 break;
             case "ArrowDown":
-                // need to peek at new location to see if available
-                var newLocation = {
-                    "x": GameState.currentState.player.location.x,
-                    "y": GameState.currentState.player.location.y -
-                        GameState.currentState.player.speed
-                };
-                if (GameState.isLocationAvailable(newLocation)){
-                    // move character down
-                    GameState.currentState.player.location.y -=
-                        GameState.currentState.player.speed;
+                if (GameState.currentState){
+                    if (!GameState.currentState.isPaused){
+                        // need to peek at new location to see if available
+                        var newLocation = {
+                            "x": GameState.currentState.player.location.x,
+                            "y": GameState.currentState.player.location.y -
+                                GameState.currentState.player.speed
+                        };
+                        if (GameState.isLocationAvailable(newLocation)){
+                            // move character down
+                            GameState.currentState.player.location.y -=
+                                GameState.currentState.player.speed;
+                        }
+                    }
+                    else {
+                        // need to decrement pause menu cursor up one if possible
+                        if (GUI.pauseMenuDetails.cursorIndex < GUI.pauseMenuDetails.options.length){
+                            GUI.pauseMenuDetails.cursorIndex++;
+                        }
+                    }
                 }
                 break;
             case "ArrowRight":
-                // need to peek at new location to see if available
-                var newLocation = {
-                    "x": GameState.currentState.player.location.x +
-                        GameState.currentState.player.speed,
-                    "y": GameState.currentState.player.location.y
-                };
-                if (GameState.isLocationAvailable(newLocation)){
-                    // move character right
-                    GameState.currentState.player.location.x +=
-                        GameState.currentState.player.speed;
+                if (GameState.currentState){
+                    if (!GameState.currentState.isPaused){
+                        // need to peek at new location to see if available
+                        var newLocation = {
+                            "x": GameState.currentState.player.location.x +
+                                GameState.currentState.player.speed,
+                            "y": GameState.currentState.player.location.y
+                        };
+                        if (GameState.isLocationAvailable(newLocation)){
+                            // move character right
+                            GameState.currentState.player.location.x +=
+                                GameState.currentState.player.speed;
+                        }
+                    }
                 }
                 break;
             case "ArrowLeft":
                 // need to peek at new location to see if available
-                var newLocation = {
-                    "x": GameState.currentState.player.location.x -
-                        GameState.currentState.player.speed,
-                    "y": GameState.currentState.player.location.y
-                };
-                if (GameState.isLocationAvailable(newLocation)){
-                    // move character left
-                    GameState.currentState.player.location.x -=
-                        GameState.currentState.player.speed;
+                if (GameState.currentState){
+                    if (!GameState.currentState.isPaused){
+                        var newLocation = {
+                            "x": GameState.currentState.player.location.x -
+                                GameState.currentState.player.speed,
+                            "y": GameState.currentState.player.location.y
+                        };
+                        if (GameState.isLocationAvailable(newLocation)){
+                            // move character left
+                            GameState.currentState.player.location.x -=
+                                GameState.currentState.player.speed;
+                        }
+                    }
                 }
                 break;
             case "f":
@@ -180,6 +209,13 @@ GameState.updatePlayerLocation = function(){
                 // Magic attack (will start with a fired projectile in direction character is facing).
                 GameState.playerActions.castMagic();
                 break;
+            case "return":
+            case "Return":
+            case "enter":
+            case "Enter":
+                GameState.activeKeys = [];
+                GameState.togglePaused();
+                    break;
             default:
                 break;
         }
@@ -514,3 +550,29 @@ GameState.calculateEnemyDamage = function(attack, enemy){
         GameState.despawnActiveEnemy(enemy);
     }
 }
+
+/**
+ * Sets gameState isPaused = true
+ */
+GameState.pauseGame = function(){
+    GameState.currentState.isPaused = true;
+};
+
+/**
+ * Sets GameState isPaused = false
+ */
+GameState.unpauseGame = function(){
+    GameState.currentState.isPaused = false;
+};
+
+/**
+ * Toggles game state
+ * @returns void
+ */
+GameState.togglePaused = function(){
+    if (!GameState.currentState.isPaused){
+        GameState.pauseGame();
+        return;
+    }
+    GameState.unpauseGame();
+};

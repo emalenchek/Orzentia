@@ -46,6 +46,11 @@ Game.setInputHandlers = function(){
             // magic attack
             case "c":
             case "C":
+            // pause/unpause
+            case "return":
+            case "Return":
+            case "enter":
+            case "Enter":
                 var length = GameState.activeKeys.filter(function(key){
                     return key === event.key;
                 }).length;
@@ -79,6 +84,9 @@ Game.setInputHandlers = function(){
             // magic attack
             case "c":
             case "C":
+            // pause/unpause
+            case "return":
+            case "enter":
                 GameState.activeKeys.splice(
                     GameState.activeKeys.indexOf(event.key),
                     1

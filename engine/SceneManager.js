@@ -195,6 +195,53 @@ SceneManager.renderForegroundTilemapToContext = function(){
 };
 
 /**
+ * Render pause menu text
+ */
+SceneManager.renderPauseMenuText = function(){
+    var pauseDetails = GUI.pauseMenuDetails;
+    var posX = SceneManager.TILE_WIDTH * 2;
+    var posY = SceneManager.TILE_HEIGHT * 2;
+
+    this.canvasCtx.font = "32px " + pauseDetails.font;
+    this.canvasCtx.fillStyle = "color: " + pauseDetails.foregroundColor + ";text-style: none;";
+
+    for (var i in pauseDetails.options){
+        if (i === pauseDetails.cursorIndex){
+            // underline this text to show user the active highlighted element
+            this.canvasCtx.fillStyle = pauseDetails.foregroundColor;
+        }
+        else {
+            this.canvasCtx.fillStyle = pauseDetails.foregroundColor;
+        }
+
+        // render text
+        this.canvasCtx.fillText(pauseDetails.options[i], posX, posY + (60 * Number(i)));
+    }
+};
+
+/**
+ * Render the pause menu
+ */
+SceneManager.renderPauseMenu = function(){
+    
+    var pauseDetails = GUI.pauseMenuDetails;
+
+    var posX = SceneManager.TILE_WIDTH;
+    var posY = SceneManager.TILE_HEIGHT;
+    var width = pauseDetails.width;
+    var height = pauseDetails.height;
+
+    // want to clear the pause menu area
+    this.canvasCtx.clearRect(posX, posY, width, height);
+    this.canvasCtx.fillStyle = pauseDetails.backgroundColor;
+    // draw the pause menu area
+    this.canvasCtx.fillRect(posX, posY, width, height);
+
+    // Populate pause menu with text
+    SceneManager.renderPauseMenuText();
+};
+
+/**
  * Renders the scene object to the screen
  * @param {Scene} scene - scene object to be rendered 
  */
@@ -203,22 +250,29 @@ SceneManager.renderScene = function(scene){
     // and load data/update state of our game
     // but for now: we are just a square
 
-    // reset canvas
-    this.canvasCtx.clearRect(0, 0, this.canvasCtx.width, this.canvasCtx.height);
+    // if game is not paused
+    if (!GameState.currentState.isPaused){
+        // reset canvas
+        this.canvasCtx.clearRect(0, 0, this.canvasCtx.width, this.canvasCtx.height);
 
-    SceneManager.renderBackgroundTilemapToContext();
-    SceneManager.renderForegroundTilemapToContext();
+        SceneManager.renderBackgroundTilemapToContext();
+        SceneManager.renderForegroundTilemapToContext();
 
-    // using the player's location, 
-    // we want to figure out the segment of the map to load
-    var x = GameState.currentState.player.location.x;
-    var y = GameState.currentState.player.location.y;
+        // using the player's location, 
+        // we want to figure out the segment of the map to load
+        var x = GameState.currentState.player.location.x;
+        var y = GameState.currentState.player.location.y;
 
-    // need to reset the canvas transform
-    var transform = this.canvasCtx.getTransform();
-    transform.e = -x;
-    transform.f = y;
-    this.canvasCtx.setTransform(transform);
+        // need to reset the canvas transform
+        var transform = this.canvasCtx.getTransform();
+        transform.e = -x;
+        transform.f = y;
+        this.canvasCtx.setTransform(transform);
+    }
+    else {
+        // game is paused
+        SceneManager.renderPauseMenu();
+    }
 };
 
 /**
@@ -408,17 +462,21 @@ SceneManager.updateActiveScene = function(){
         }
 
         SceneManager.renderScene(SceneManager.activeScene);
-        SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
 
-        // Need to check to see if any attacks to be rendered
-        // will make contact with an enemy 
-        GameState.checkAttackEnemyCollision()
+        if (!GameState.currentState.isPaused){
+            SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
+            
+            // Need to check to see if any attacks to be rendered
+            // will make contact with an enemy 
+            GameState.checkAttackEnemyCollision()
 
-        // Need to render all enemies onto the screen
-        SceneManager.renderEnemies();
+            // Need to render all enemies onto the screen
+            SceneManager.renderEnemies();
 
-        // Need to render all projectiles
-        SceneManager.renderAttackAnimations();
+            // Need to render all projectiles
+            SceneManager.renderAttackAnimations();
+        }
+
 
 
         // reset frame count
