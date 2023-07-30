@@ -7,7 +7,7 @@ var GUI = {};
 
 // Data associated with the pause menu for rendering
 GUI.pauseMenuDetails = {
-    title: "Menu",
+    title: "Pause Menu",
     width: 400,
     height: 400,
     options: [

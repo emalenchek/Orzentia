@@ -98,3 +98,13 @@ Game.setInputHandlers = function(){
         }
     });
 }
+
+/**
+ * Returns the calculated distance between two points
+ * @param {Object} p1 - point 1 {x, y} 
+ * @param {Object} p2 - point 2 {x, y}
+ * @returns 
+ */
+Game.getDistanceBetweenPoints = function(p1, p2){
+    return Math.sqrt(((p1.x - p2.x) * (p1.x - p2.x)) + ((p1.y - p2.y) * (p1.y - p2.y)));
+};

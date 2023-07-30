@@ -13,10 +13,12 @@ GameState.exampleEnemy = {
     "spritesheet": "./assets/spritesheets/slime_monster_spritesheet.png",
     "spriteIndex": 6,
     "spriteIndexArrayLength": 8,
-    // dectates enemy movement patterm
-    // idle (stationary), aggressive (moves towards the player), etc.
-    "movementType": "idle",
+    // dictates enemy movement patterm
+    // idle (stationary), aggressive (moves towards the player), erratic, etc.
+    "movementType": "aggressive",
+    "detectsPlayer": false,
     "speed": 2,
+    "detectionRange": 200,
     // location on the canvas
     "location": {
         x: 120,
@@ -210,6 +212,9 @@ GameState.updatePlayerLocation = function(){
 
                 // Magic attack (will start with a fired projectile in direction character is facing).
                 GameState.playerActions.castMagic();
+
+                // reset active key list
+                GameState.activeKeys = [];
                 break;
             case "return":
             case "Return":
@@ -490,16 +495,74 @@ GameState.despawnActiveEnemy = function(enemy){
 };
 
 /**
+ * Modifies the active sprite index for specified enemy,
+ * NOTE: This will probably only need to be called every few frames
+ * @param {Object} enemy - the enemy object to be adjusted 
+ */
+GameState.updateActiveEnemySprite = function(enemy){
+    // enemy.spriteIndex++;
+    if (enemy.spriteIndex >= enemy.spriteIndexArrayLength){
+        enemy.spriteIndex = 0;
+    }
+};
+
+/**
+ * See if the player is within line of sight of the specified enemy
+ * @param {Object} enemy - the enemy that is doing the "detection"
+ */
+GameState.checkEnemyDetectsPlayer = function(enemy){
+    var playerOffsetLocation = GameState.currentState.player.location;
+    var enemyLocation = enemy.location;
+
+    var playerLocation = SceneManager.getTrueLocation(playerOffsetLocation.x, playerOffsetLocation.y);
+
+    // should probably break this out 
+    var distanceFromPlayerToEnemy = Game.getDistanceBetweenPoints(enemyLocation, playerLocation);
+
+    if (distanceFromPlayerToEnemy <= enemy.detectionRange){
+        // need to check every tile between enemy and player
+        // to decide whether player is "visible" to enemy
+        var found = true;
+        // console.log(enemy.name + " detects player!!");
+        // TODO
+        // actually check each tile between enemy and player
+        return found;
+    }
+    return false;
+};
+
+/**
  * Make updates to the active enemy object
  * @param {*} enemy - enemy to be updated
  */
 GameState.updateActiveEnemy = function(enemy){
     // will want to have some pathfinding algorithm for moving enemies
     // ex. movementType === "agressive", need algorithm to find shortest path to the player
-    // enemy.spriteIndex++;
-    // if (enemy.spriteIndex >= enemy.spriteIndexArrayLength){
-    //     enemy.spriteIndex = 0;
-    // }
+    
+    // NOTE: may want to move this outside of the updateActiveEnemy function
+    // as we only want to do this every few frames
+    GameState.updateActiveEnemySprite(enemy);
+
+    var type = enemy.movementType;
+    switch (type){
+        case "custom":
+            // enemy has a predefined movement
+            enemy.performCustomAction();
+            break;
+        case "idle":
+            // do nothing, the enemy does not move
+            break;
+        case "aggressive":
+            // If player is within L.O.S, move towards the player. 
+            // L.O.S is a straight line without any colliding tiles interfering.
+            var detected = GameState.checkEnemyDetectsPlayer(enemy);
+            break;
+        case "erratic":
+            // nothing yet
+            break;
+        default:
+            break;
+    }
 };
 
 /**
