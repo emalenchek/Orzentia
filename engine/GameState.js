@@ -18,7 +18,7 @@ GameState.exampleEnemy = {
     "movementType": "aggressive",
     "detectsPlayer": false,
     "speed": 2,
-    "detectionRange": 200,
+    "detectionRange": 250,
     // location on the canvas
     "location": {
         x: 120,
@@ -231,7 +231,7 @@ GameState.updatePlayerLocation = function(){
 };
 
 /**
- * Checks the foreground tilemap to see if the intended location is available
+ * Checks the foreground/background tilemaps to see if the intended location is available
  * @param {Object} newLocation - x/y coord location
  * @param {Boolean} isTrue - whether or not the location is already a "true" location.
  * Example, enemies locations are tracked without accounting for player offset
