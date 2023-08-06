@@ -199,8 +199,12 @@ SceneManager.renderForegroundTilemapToContext = function(){
  */
 SceneManager.renderPauseMenuText = function(){
     var pauseDetails = GUI.pauseMenuDetails;
-    var posX = SceneManager.TILE_WIDTH * 2;
-    var posY = SceneManager.TILE_HEIGHT * 2;
+
+    var playerX = GameState.currentState.player.location.x;
+    var playerY = GameState.currentState.player.location.y;
+
+    var posX = SceneManager.TILE_WIDTH * 2 + playerX;
+    var posY = SceneManager.TILE_HEIGHT * 2 - playerY;
 
     this.canvasCtx.font = "32px " + pauseDetails.font;
 
@@ -228,8 +232,11 @@ SceneManager.renderPauseMenu = function(){
     
     var pauseDetails = GUI.pauseMenuDetails;
 
-    var posX = SceneManager.TILE_WIDTH;
-    var posY = SceneManager.TILE_HEIGHT;
+    var playerX = GameState.currentState.player.location.x;
+    var playerY = GameState.currentState.player.location.y;
+
+    var posX = SceneManager.TILE_WIDTH + playerX;
+    var posY = SceneManager.TILE_HEIGHT - playerY;
     var width = pauseDetails.width;
     var height = pauseDetails.height;
 
