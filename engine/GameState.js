@@ -232,8 +232,11 @@ GameState.updatePlayerLocation = function(){
 
 /**
  * Checks the foreground tilemap to see if the intended location is available
+ * @param {Object} newLocation - x/y coord location
+ * @param {Boolean} isTrue - whether or not the location is already a "true" location.
+ * Example, enemies locations are tracked without accounting for player offset
  */
-GameState.isLocationAvailable = function(newLocation){
+GameState.isLocationAvailable = function(newLocation, isTrue){
     var x = newLocation.x;
     var y = newLocation.y
 
@@ -242,9 +245,15 @@ GameState.isLocationAvailable = function(newLocation){
     // y coordinate of player (need to subtract half the height as an offset to truly center)
     var yCalc = (SceneManager.canvasEl.height / 2) - (SceneManager.PLAYER_HEIGHT / 2);
 
-    // use player location as offset (and the offset based on canvas size) to get trueX and trueY
-    var trueX = (xCalc + x) - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
-    var trueY = (yCalc - y) + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / 100)) + SceneManager.TILE_HEIGHT;
+    if (!isTrue){
+        // use player location as offset (and the offset based on canvas size) to get trueX and trueY
+        var trueX = (xCalc + x) - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
+        var trueY = (yCalc - y) + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / 100)) + SceneManager.TILE_HEIGHT;
+    }
+    else {
+        var trueX = newLocation.x - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
+        var trueY = newLocation.y + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / 100)) + SceneManager.TILE_HEIGHT;
+    }
 
     // ignore the remainder, as this should check the whole area associated with new location
     var tileXIndex = Math.floor(trueX / SceneManager.TILE_WIDTH);
@@ -562,7 +571,7 @@ GameState.getPossibleEnemyMoves = function(enemy){
                         break;
                 }
 
-                if (GameState.isLocationAvailable(newLocation)){
+                if (GameState.isLocationAvailable(newLocation, true)){
                     availableMoves.push(newLocation);       
                 }
 
