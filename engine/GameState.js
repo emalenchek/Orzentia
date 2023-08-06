@@ -532,6 +532,89 @@ GameState.checkEnemyDetectsPlayer = function(enemy){
 };
 
 /**
+ * Gets list of all available moves that can be performed
+ * By specified enemy
+ * @param {Object} enemy - the enemy to obtain possible moves for
+ */
+GameState.getPossibleEnemyMoves = function(enemy){
+    var availableMoves = [];
+    if (enemy.movementType === "aggressive" ||
+        enemy.movementType === "erratic"){
+            var enemyLocation = enemy.location;
+            // check all possible moves to see if they are available
+            var count = 0;
+            while (count < 4){
+                var newLocation = JSON.parse(JSON.stringify(enemyLocation));
+                switch (count){
+                    case 0:
+                        newLocation.x = newLocation.x + enemy.speed;
+                        break;
+                    case 1:
+                        newLocation.x = newLocation.x - enemy.speed;
+                        break;
+                    case 2:
+                        newLocation.y = newLocation.y + enemy.speed;
+                        break;
+                    case 3:
+                        newLocation.y = newLocation.y - enemy.speed;
+                        break;
+                    default:
+                        break;
+                }
+
+                if (GameState.isLocationAvailable(newLocation)){
+                    availableMoves.push(newLocation);       
+                }
+
+                count++;
+            }
+            return availableMoves;
+    }
+    return [];
+};
+
+
+/**
+ * Updates the position of specified "aggressive" enemy
+ * to move closer to the player
+ * @param {Object} enemy - enemy to update position 
+ */
+GameState.updateEnemyAggressivePosition = function(enemy){
+    var playerOffsetLocation = GameState.currentState.player.location;
+    var playerLocation = SceneManager.getTrueLocation(playerOffsetLocation.x, playerOffsetLocation.y);
+    var enemyLocation = enemy.location;
+
+    // get distance from player to enemy
+    var distanceFromPlayerToEnemy = Game.getDistanceBetweenPoints(enemyLocation, playerLocation);
+    
+    var possibleEnemyMoves = GameState.getPossibleEnemyMoves(enemy);
+    var selectedMove = null;
+    for (var i in possibleEnemyMoves){
+        // find best available move
+        // "best" is the one that will move closest to the player
+        var newLocation = possibleEnemyMoves[i];
+
+        var newDistanceToPlayer = Game.getDistanceBetweenPoints(newLocation, playerLocation);
+        if (newDistanceToPlayer <= distanceFromPlayerToEnemy){
+            if (selectedMove === null){
+                selectedMove = newLocation;
+            }
+            else {
+                // see if the new move is a better option
+                var selectedMoveDistance = Game.getDistanceBetweenPoints(selectedMove, playerLocation);
+                if (selectedMoveDistance > newDistanceToPlayer){
+                    selectedMove = newLocation;
+                }
+            }
+        }
+    }
+
+    if (selectedMove !== null){
+        enemy.location = selectedMove;
+    }
+};
+
+/**
  * Make updates to the active enemy object
  * @param {*} enemy - enemy to be updated
  */
@@ -556,6 +639,12 @@ GameState.updateActiveEnemy = function(enemy){
             // If player is within L.O.S, move towards the player. 
             // L.O.S is a straight line without any colliding tiles interfering.
             var detected = GameState.checkEnemyDetectsPlayer(enemy);
+
+            if (detected){
+                // update enemy position by speed towards the player
+                GameState.updateEnemyAggressivePosition(enemy);
+            }
+
             break;
         case "erratic":
             // nothing yet
