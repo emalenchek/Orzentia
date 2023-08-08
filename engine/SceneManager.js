@@ -18,10 +18,13 @@ SceneManager.sceneStack = [];
 // tilemap constants;
 SceneManager.CANVAS_WIDTH = 500;
 SceneManager.CANVAS_HEIGHT = 500;
-SceneManager.MAP_WIDTH = 20;
-SceneManager.MAP_HEIGHT = 20;
-SceneManager.TILE_WIDTH = 50;
-SceneManager.TILE_HEIGHT = 50;
+SceneManager.MAP_WIDTH = 48;
+SceneManager.MAP_HEIGHT = 48;
+SceneManager.TILE_WIDTH = 16 * 2.5;
+SceneManager.TILE_HEIGHT = 16 * 2.5;
+
+SceneManager.canvasStartXOffset = -440;
+SceneManager.canvasStartYOffset = -1120; 
 
 // {x, y, z}
 // x: row tilemap value
@@ -126,73 +129,82 @@ SceneManager.loadScene = function(newScene){
     SceneManager.loadPlayer();
 };
 
-/**
- * Renders the background textures from the tilemap to the context
- */
-SceneManager.renderBackgroundTilemapToContext = function(){
-    var tileMapImage = document.getElementById("world-sprites");
-    for (var i = 0; i < this.MAP_WIDTH; i++){
-        for (var j = 0; j < this.MAP_HEIGHT; j++){
-            // The value of the current tile based on the tile array example
-            var index = (i * this.MAP_WIDTH) + j;
-            var xValue = SceneManager.backgroundTileMapArray[index][0];
-
-            // setting this to 0 for now, until tileMapExample is made into 2D array
-            var yValue = SceneManager.backgroundTileMapArray[index][1];
-
-            // get the position coords for this tile
-            var tileY = i * this.TILE_WIDTH;
-            var tileX = j * this.TILE_HEIGHT;
-
-            // Logic for drawing tiles from map to canvas
-            SceneManager.canvasCtx.drawImage(
-                tileMapImage,
-                xValue * 16,
-                yValue * 16,
-                16,
-                16,
-                tileX,
-                tileY,
-                this.TILE_WIDTH,
-                this.TILE_HEIGHT
-            );
-        }
-    }
+SceneManager.renderWorldBackgroundImageToContext = function(){
+    var worldMapImage = document.getElementById("world-image");
+    SceneManager.canvasCtx.drawImage(
+        worldMapImage,
+        SceneManager.canvasStartXOffset,
+        SceneManager.canvasStartYOffset
+    );
 };
 
-/**
- * Render the foreground textures from the tilemap to the context
- */
-SceneManager.renderForegroundTilemapToContext = function(){
-    var tileMapImage = document.getElementById("world-sprites");
-    for (var i = 0; i < this.MAP_WIDTH; i++){
-        for (var j = 0; j < this.MAP_HEIGHT; j++){
-            // The value of the current tile based on the tile array example
-            var index = (i * this.MAP_WIDTH) + j;
-            var xValue = SceneManager.foregroundTileMapArray[index][0];
+// /**
+//  * Renders the background textures from the tilemap to the context
+//  */
+// SceneManager.renderBackgroundTilemapToContext = function(){
+//     var tileMapImage = document.getElementById("world-sprites");
+//     for (var i = 0; i < this.MAP_WIDTH; i++){
+//         for (var j = 0; j < this.MAP_HEIGHT; j++){
+//             // The value of the current tile based on the tile array example
+//             var index = (i * this.MAP_WIDTH) + j;
+//             var xValue = SceneManager.backgroundTileMapArray[index][0];
 
-            // setting this to 0 for now, until tileMapExample is made into 2D array
-            var yValue = SceneManager.foregroundTileMapArray[index][1];
+//             // setting this to 0 for now, until tileMapExample is made into 2D array
+//             var yValue = SceneManager.backgroundTileMapArray[index][1];
 
-            // get the position coords for this tile
-            var tileY = i * this.TILE_WIDTH;
-            var tileX = j * this.TILE_HEIGHT;
+//             // get the position coords for this tile
+//             var tileY = i * this.TILE_WIDTH;
+//             var tileX = j * this.TILE_HEIGHT;
 
-            // Logic for drawing tiles from map to canvas
-            SceneManager.canvasCtx.drawImage(
-                tileMapImage,
-                xValue * 16,
-                yValue * 16,
-                16,
-                16,
-                tileX,
-                tileY,
-                this.TILE_WIDTH,
-                this.TILE_HEIGHT
-            );
-        }
-    }
-};
+//             // Logic for drawing tiles from map to canvas
+//             SceneManager.canvasCtx.drawImage(
+//                 tileMapImage,
+//                 xValue * 16,
+//                 yValue * 16,
+//                 16,
+//                 16,
+//                 tileX,
+//                 tileY,
+//                 this.TILE_WIDTH,
+//                 this.TILE_HEIGHT
+//             );
+//         }
+//     }
+// };
+
+// /**
+//  * Render the foreground textures from the tilemap to the context
+//  */
+// SceneManager.renderForegroundTilemapToContext = function(){
+//     var tileMapImage = document.getElementById("world-sprites");
+//     for (var i = 0; i < this.MAP_WIDTH; i++){
+//         for (var j = 0; j < this.MAP_HEIGHT; j++){
+//             // The value of the current tile based on the tile array example
+//             var index = (i * this.MAP_WIDTH) + j;
+//             var xValue = SceneManager.foregroundTileMapArray[index][0];
+
+//             // setting this to 0 for now, until tileMapExample is made into 2D array
+//             var yValue = SceneManager.foregroundTileMapArray[index][1];
+
+//             // get the position coords for this tile
+//             var tileY = i * this.TILE_WIDTH;
+//             var tileX = j * this.TILE_HEIGHT;
+
+//             // Logic for drawing tiles from map to canvas
+//             SceneManager.canvasCtx.drawImage(
+//                 tileMapImage,
+//                 xValue * 16,
+//                 yValue * 16,
+//                 16,
+//                 16,
+//                 tileX,
+//                 tileY,
+//                 this.TILE_WIDTH,
+//                 this.TILE_HEIGHT
+//             );
+//         }
+//     }
+// };
 
 /**
  * Render pause menu text
@@ -264,8 +276,10 @@ SceneManager.renderScene = function(scene){
         // reset canvas
         this.canvasCtx.clearRect(0, 0, this.canvasCtx.width, this.canvasCtx.height);
 
-        SceneManager.renderBackgroundTilemapToContext();
-        SceneManager.renderForegroundTilemapToContext();
+        // SceneManager.renderBackgroundTilemapToContext();
+        SceneManager.renderWorldBackgroundImageToContext();
+
+        // SceneManager.renderForegroundTilemapToContext();
 
         // using the player's location, 
         // we want to figure out the segment of the map to load
