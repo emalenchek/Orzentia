@@ -240,15 +240,15 @@ GameState.isLocationAvailable = function(newLocation, isTrue){
     var x = newLocation.x;
     var y = newLocation.y;
 
-    // x coordinate of player (need to subtract half the width as an offset to truly center)
+    // x offset of player (need to subtract half the width as an offset to truly center)
     var xCalc = (SceneManager.canvasEl.width / 2) - (SceneManager.PLAYER_WIDTH / 2);
-    // y coordinate of player (need to subtract half the height as an offset to truly center)
+    // y offset of player (need to subtract half the height as an offset to truly center)
     var yCalc = (SceneManager.canvasEl.height / 2) - (SceneManager.PLAYER_HEIGHT / 2);
 
     if (!isTrue){
         // use player location as offset (and the offset based on canvas size) to get trueX and trueY
-        var trueX = (xCalc + x) - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / (SceneManager.CANVAS_HEIGHT * SceneManager.CANVAS_WIDTH * SceneManager.CANVAS_HEIGHT)));
-        var trueY = (yCalc - y) + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / (SceneManager.CANVAS_HEIGHT * SceneManager.CANVAS_HEIGHT))) + SceneManager.TILE_HEIGHT;
+        var trueX = (xCalc + x) + (SceneManager.MAP_WIDTH / SceneManager.TILE_WIDTH);
+        var trueY = (yCalc - y) + (SceneManager.MAP_HEIGHT / SceneManager.TILE_HEIGHT) + SceneManager.TILE_HEIGHT;
     }
     else {
         var trueX = x - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
