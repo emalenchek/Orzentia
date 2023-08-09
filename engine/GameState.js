@@ -256,22 +256,28 @@ GameState.isLocationAvailable = function(newLocation, isTrue){
     }
 
     // ignore the remainder, as this should check the whole area associated with new location
-    var tileXIndex = Math.floor((trueX - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
-    var tileYIndex = Math.floor((trueY - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileXIndex1 = Math.floor((trueX - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex1 = Math.floor((trueY - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileXIndex2 = Math.floor((trueX + SceneManager.PLAYER_WIDTH - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex2 = Math.floor((trueY - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileXIndex3 = Math.floor((trueX - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex3 = Math.floor((trueY - SceneManager.PLAYER_HEIGHT - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileXIndex4 = Math.floor((trueX  + SceneManager.PLAYER_WIDTH - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex4 = Math.floor((trueY - SceneManager.PLAYER_HEIGHT - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
 
     // x and y are switched for this calculation
-    var arrayIndex = (tileYIndex * SceneManager.MAP_WIDTH) + tileXIndex;
+    var arrayIndex1 = (tileYIndex1 * SceneManager.MAP_WIDTH) + tileXIndex1;
+    var arrayIndex2 = (tileYIndex2 * SceneManager.MAP_WIDTH) + tileXIndex2;
+    var arrayIndex3 = (tileYIndex3 * SceneManager.MAP_WIDTH) + tileXIndex3;
+    var arrayIndex4 = (tileYIndex4 * SceneManager.MAP_WIDTH) + tileXIndex4;
 
-    console.log(trueX, tileXIndex);
-    console.log(trueY, tileYIndex);
-
-    // check to see if collision is set at this location - background tilemap
-    if (arrayIndex >= 0 &&
-        arrayIndex < SceneManager.MAP_WIDTH * SceneManager.MAP_HEIGHT){
-            if (Game.collisionsMap[arrayIndex] !== 0){
-                console.log("Movement blocked");
-                return false;
-            }
+    if (GameState.collisionsLookup[arrayIndex1] ||
+        GameState.collisionsLookup[arrayIndex2] ||
+        GameState.collisionsLookup[arrayIndex3] ||
+        GameState.collisionsLookup[arrayIndex4]){
+        // found a collision
+        console.log("collision detected!!!");
+        return false;
     }
 
     return true;

@@ -123,10 +123,47 @@ SceneManager.createScene = function(newScene){
 SceneManager.loadScene = function(newScene){
     var scene = SceneManager.createScene(newScene);
     SceneManager.originCtxTransform = this.canvasCtx.getTransform();
+
+    SceneManager.formatCollisionArray();
     // load background based off currentState.player.location
     SceneManager.renderScene(scene);
     // load player
     SceneManager.loadPlayer();
+};
+
+// SceneManager.renderCollisionBlocks = function(){
+//     for (var i in Game.collisionsMap){
+//         for (var j in Game.collisionsMap){
+//             if (Game.collisionsMap[i][j] !== 0){
+//                 // render a black block at this index
+//                 var x = j * SceneManager.TILE_WIDTH;
+//                 var y = i * SceneManager.TILE_HEIGHT;
+//                 var width = SceneManager.TILE_WIDTH;
+//                 var height = SceneManager.TILE_HEIGHT;
+//                 SceneManager.canvasCtx.fillStyle = "black";
+//                 SceneManager.canvasCtx.fillRect(x + SceneManager.canvasStartXOffset, y + SceneManager.canvasStartYOffset,width,height);
+//             }
+//         }
+//     }
+// };
+
+SceneManager.formatCollisionArray = function(){
+    var collisionArray = [];
+    GameState.collisionsLookup = {};
+    
+    for (var i = 0; i < SceneManager.MAP_HEIGHT; i++){
+        var newCollisionArray = [];
+        for (var j = 0; j < SceneManager.MAP_WIDTH; j++){
+            var index = i * SceneManager.MAP_HEIGHT + j;
+            if (Game.collisionsMap[index] !==  0){
+                // render blackBox
+                GameState.collisionsLookup[index] = Game.collisionsMap[index];
+            }
+            newCollisionArray.push(Game.collisionsMap[index]);
+        }
+        collisionArray.push(newCollisionArray);
+    }
+    Game.collisionsMap = collisionArray;
 };
 
 SceneManager.renderWorldBackgroundImageToContext = function(){
@@ -278,6 +315,8 @@ SceneManager.renderScene = function(scene){
 
         // SceneManager.renderBackgroundTilemapToContext();
         SceneManager.renderWorldBackgroundImageToContext();
+
+        // SceneManager.renderCollisionBlocks();
 
         // SceneManager.renderForegroundTilemapToContext();
 
