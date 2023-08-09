@@ -38,8 +38,10 @@ GameState.newStateTemplate = {
         // This will be where all information regarding the player is stored
         // Name, Health, Level(?), inventory, equipped, spells/abilities, etc.
         "health": 50,
-        "width": 32,
-        "height": 32,
+        "width": 40,
+        "height": 40,
+        "spriteWidth": 32,
+        "spriteHeight": 32,
         "level": 1,
         "experience": 0,
         "inventory": [],
@@ -60,15 +62,15 @@ GameState.newStateTemplate = {
         },
         // N,S,E,W (direction being faced)
         "orientation": "S",
-        "spritesheetSource": "./assets/spritesheets/Green-Cap-Character-16x18.png",
+        "spritesheetSource": "./assets/spritesheets/DarwinSprites.png",
         // unsure on the name for now, but it sounds pretty swag
         "incarnate": {
             "school": "fire",
             "type": "projectile",
             "damage": 5,
             "speed": 5,
-            "width": 64,
-            "height": 64,
+            "width": 80,
+            "height": 80,
             // this will eventually be a full spritesheet
             "sprites": [
                 "./assets/spells/fireball/Fireball1.png",
@@ -117,7 +119,7 @@ GameState.updatePlayerLocation = function(){
                             "y": GameState.currentState.player.location.y +
                                 GameState.currentState.player.speed
                         };
-                        if (GameState.isLocationAvailable(newLocation)){
+                        if (GameState.isLocationAvailable(newLocation, null, GameState.currentState.player)){
                             // move character up
                             GameState.currentState.player.location.y +=
                             GameState.currentState.player.speed;
@@ -141,7 +143,7 @@ GameState.updatePlayerLocation = function(){
                             "y": GameState.currentState.player.location.y -
                                 GameState.currentState.player.speed
                         };
-                        if (GameState.isLocationAvailable(newLocation)){
+                        if (GameState.isLocationAvailable(newLocation, null, GameState.currentState.player)){
                             // move character down
                             GameState.currentState.player.location.y -=
                                 GameState.currentState.player.speed;
@@ -165,7 +167,7 @@ GameState.updatePlayerLocation = function(){
                                 GameState.currentState.player.speed,
                             "y": GameState.currentState.player.location.y
                         };
-                        if (GameState.isLocationAvailable(newLocation)){
+                        if (GameState.isLocationAvailable(newLocation, null, GameState.currentState.player)){
                             // move character right
                             GameState.currentState.player.location.x +=
                                 GameState.currentState.player.speed;
@@ -182,7 +184,7 @@ GameState.updatePlayerLocation = function(){
                                 GameState.currentState.player.speed,
                             "y": GameState.currentState.player.location.y
                         };
-                        if (GameState.isLocationAvailable(newLocation)){
+                        if (GameState.isLocationAvailable(newLocation, null, GameState.currentState.player)){
                             // move character left
                             GameState.currentState.player.location.x -=
                                 GameState.currentState.player.speed;
@@ -234,9 +236,10 @@ GameState.updatePlayerLocation = function(){
  * Checks the collision tilemap list to see if the intended location is available
  * @param {Object} newLocation - x/y coord location
  * @param {Boolean} isTrue - whether or not the location is already a "true" location.
+ * @param {Object} entity - The entity check
  * Example, enemies locations are tracked without accounting for player offset
  */
-GameState.isLocationAvailable = function(newLocation, isTrue){
+GameState.isLocationAvailable = function(newLocation, isTrue, entity){
     var x = newLocation.x;
     var y = newLocation.y;
 
@@ -258,12 +261,12 @@ GameState.isLocationAvailable = function(newLocation, isTrue){
     // ignore the remainder, as this should check the whole area associated with new location
     var tileXIndex1 = Math.floor((trueX - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
     var tileYIndex1 = Math.floor((trueY - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
-    var tileXIndex2 = Math.floor((trueX + SceneManager.PLAYER_WIDTH - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileXIndex2 = Math.floor((trueX + entity.width - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
     var tileYIndex2 = Math.floor((trueY - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
     var tileXIndex3 = Math.floor((trueX - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
-    var tileYIndex3 = Math.floor((trueY - SceneManager.PLAYER_HEIGHT - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
-    var tileXIndex4 = Math.floor((trueX  + SceneManager.PLAYER_WIDTH - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
-    var tileYIndex4 = Math.floor((trueY - SceneManager.PLAYER_HEIGHT - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileYIndex3 = Math.floor((trueY - entity.height - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileXIndex4 = Math.floor((trueX  + entity.width - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex4 = Math.floor((trueY - entity.height - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
 
     // x and y are switched for this calculation
     var arrayIndex1 = (tileYIndex1 * SceneManager.MAP_WIDTH) + tileXIndex1;
@@ -380,7 +383,7 @@ GameState.updateActiveAttack = function(attack){
                 };
 
                 // check for terrain collision
-                if (GameState.isLocationAvailable(newLocation)){
+                if (GameState.isLocationAvailable(newLocation, null, attack)){
                     attack.currentLocation.y += speed;
                 }
                 else {
@@ -394,7 +397,7 @@ GameState.updateActiveAttack = function(attack){
                     "y": attack.currentLocation.y - speed - (SceneManager.TILE_HEIGHT)
                 };
                 // check for terrain collision
-                if (GameState.isLocationAvailable(newLocation)){
+                if (GameState.isLocationAvailable(newLocation, null, attack)){
                     attack.currentLocation.y -= speed;
                 }
                 else {
@@ -408,7 +411,7 @@ GameState.updateActiveAttack = function(attack){
                     "y": attack.currentLocation.y
                 };
                 // check for terrain collision
-                if (GameState.isLocationAvailable(newLocation)){
+                if (GameState.isLocationAvailable(newLocation, null, attack)){
                     attack.currentLocation.x -= speed;
                 }
                 else {
@@ -422,7 +425,7 @@ GameState.updateActiveAttack = function(attack){
                     "y": attack.currentLocation.y
                 };
                 // check for terrain collision
-                if (GameState.isLocationAvailable(newLocation)){
+                if (GameState.isLocationAvailable(newLocation, null, attack)){
                     attack.currentLocation.x += speed;
                 }
                 else {
@@ -570,7 +573,7 @@ GameState.getPossibleEnemyMoves = function(enemy){
                         break;
                 }
 
-                if (GameState.isLocationAvailable(newLocation, true)){
+                if (GameState.isLocationAvailable(newLocation, true, enemy)){
                     availableMoves.push(newLocation);       
                 }
 
