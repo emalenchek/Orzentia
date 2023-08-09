@@ -360,37 +360,13 @@ SceneManager.getTrueLocation = function(x, y){
 }
 
 /**
- * Gets the rotation value for the player's orientation
- * Based on cardinal direction
- */
-SceneManager.getPlayerOrientationValue = function(rotation){
-    var orientation = GameState.currentState.player.orientation;
-    switch (orientation){
-        case "N":
-            // rotation = 1;
-            break;
-        case "S":
-            // rotation = 0;
-            break;
-        case "E":
-            rotation = 1;
-            break;
-        case "W":
-            rotation = 0;
-            break;
-        default:
-            break;
-    };
-    return rotation;
-};
-
-/**
  * Determines the active sprite data based on if player is moving,
  * and in what environment
  */
-SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex, rotation){
+SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
     if (!GameState.activeKeys.length){
-        rotation = SceneManager.getPlayerOrientationValue(rotation)
+        GameState.updatePlayerOrientationValue();
+        var rotation = GameState.currentState.player.rotation;
         return {
             "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
             "sy": 0,
@@ -406,8 +382,8 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex, r
         switch (activeMovement){
             case "ArrowUp":
                 GameState.currentState.player.orientation = "N";
-                // do not update player orientation for n/s
-                // rotation = SceneManager.getPlayerOrientationValue(rotation);
+                GameState.updatePlayerOrientationValue();
+                var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
                     "sy": SceneManager.PLAYER_SPRITE_HEIGHT,
@@ -418,8 +394,8 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex, r
                 break;
             case "ArrowDown":
                 GameState.currentState.player.orientation = "S";
-                // do not update player orientation for n/s
-                // rotation = SceneManager.getPlayerOrientationValue(rotation);
+                GameState.updatePlayerOrientationValue();
+                var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
                     "sy": SceneManager.PLAYER_SPRITE_HEIGHT,
@@ -430,7 +406,8 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex, r
                 break;
             case "ArrowLeft":
                 GameState.currentState.player.orientation = "W";
-                rotation = SceneManager.getPlayerOrientationValue(rotation);
+                GameState.updatePlayerOrientationValue();
+                var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
                     "sy": SceneManager.PLAYER_SPRITE_HEIGHT,
@@ -441,7 +418,8 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex, r
                 break;
             case "ArrowRight":
                 GameState.currentState.player.orientation = "E";
-                rotation = SceneManager.getPlayerOrientationValue(rotation);
+                GameState.updatePlayerOrientationValue();
+                var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
                     "sy": SceneManager.PLAYER_SPRITE_HEIGHT,
@@ -451,7 +429,8 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex, r
                 }
                 break;
             default:
-                rotation = SceneManager.getPlayerOrientationValue(rotation);
+                GameState.updatePlayerOrientationValue();
+                var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH,
                     "sy": SceneManager.PLAYER_SPRITE_HEIGHT * rotation,
@@ -468,7 +447,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex, r
 /**
  * A method that loads the player character onto the scene
  */
-SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, rotation, frameCount){
+SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, frameCount){
     // for now the player is just a square, 
     // and we want to center the character
 
@@ -488,7 +467,7 @@ SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, rotation, frameCou
 
     // Get the correct sprite data
 
-    var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex, rotation);
+    var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
 
     // Draw image to canvas
     this.canvasCtx.drawImage(
@@ -513,7 +492,6 @@ SceneManager.updateActiveScene = function(){
     var currentLoopIndex = 0;
     var frameCount = 0;
     // player orientation default
-    var rotation = 0;
     var lastFrameTime = 0;
 
     var callback = function(time){
@@ -532,7 +510,7 @@ SceneManager.updateActiveScene = function(){
         SceneManager.renderScene(SceneManager.activeScene);
 
         if (!GameState.currentState.isPaused){
-            SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, rotation, frameCount);
+            SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
             
             // Need to check to see if any attacks to be rendered
             // will make contact with an enemy 

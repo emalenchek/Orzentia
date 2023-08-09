@@ -62,6 +62,7 @@ GameState.newStateTemplate = {
         },
         // N,S,E,W (direction being faced)
         "orientation": "S",
+        "rotation": 0,
         "spritesheetSource": "./assets/spritesheets/DarwinSprites.png",
         // unsure on the name for now, but it sounds pretty swag
         "incarnate": {
@@ -296,6 +297,30 @@ GameState.playerActions.castMagic = function(){
     if (spell.type === "projectile"){
         GameState.playerActions.fireMagicProjectile(spell);
     }
+};
+
+/**
+ * updates the rotation value for the player's orientation
+ * Based on cardinal direction
+ */
+ GameState.updatePlayerOrientationValue = function(rotation){
+    var orientation = GameState.currentState.player.orientation;
+    switch (orientation){
+        case "N":
+            // rotation = 1;
+            break;
+        case "S":
+            // rotation = 0;
+            break;
+        case "E":
+            GameState.currentState.player.rotation = 1;
+            break;
+        case "W":
+            GameState.currentState.player.rotation = 0;
+            break;
+        default:
+            break;
+    };
 };
 
 /**
