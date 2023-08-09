@@ -231,56 +231,55 @@ GameState.updatePlayerLocation = function(){
 };
 
 /**
- * Checks the foreground/background tilemaps to see if the intended location is available
+ * Checks the collision tilemap list to see if the intended location is available
  * @param {Object} newLocation - x/y coord location
  * @param {Boolean} isTrue - whether or not the location is already a "true" location.
  * Example, enemies locations are tracked without accounting for player offset
  */
 GameState.isLocationAvailable = function(newLocation, isTrue){
     var x = newLocation.x;
-    var y = newLocation.y
+    var y = newLocation.y;
 
-    // x coordinate of player (need to subtract half the width as an offset to truly center)
+    // x offset of player (need to subtract half the width as an offset to truly center)
     var xCalc = (SceneManager.canvasEl.width / 2) - (SceneManager.PLAYER_WIDTH / 2);
-    // y coordinate of player (need to subtract half the height as an offset to truly center)
+    // y offset of player (need to subtract half the height as an offset to truly center)
     var yCalc = (SceneManager.canvasEl.height / 2) - (SceneManager.PLAYER_HEIGHT / 2);
 
     if (!isTrue){
         // use player location as offset (and the offset based on canvas size) to get trueX and trueY
-        var trueX = (xCalc + x) - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
-        var trueY = (yCalc - y) + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / 100)) + SceneManager.TILE_HEIGHT;
+        var trueX = (xCalc + x) + (SceneManager.MAP_WIDTH / SceneManager.TILE_WIDTH);
+        var trueY = (yCalc - y) + (SceneManager.MAP_HEIGHT / SceneManager.TILE_HEIGHT) + SceneManager.TILE_HEIGHT;
     }
     else {
-        var trueX = newLocation.x - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
-        var trueY = newLocation.y + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / 100)) + SceneManager.TILE_HEIGHT;
+        var trueX = x - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
+        var trueY = y + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / 100)) + SceneManager.TILE_HEIGHT;
     }
 
     // ignore the remainder, as this should check the whole area associated with new location
-    var tileXIndex = Math.floor(trueX / SceneManager.TILE_WIDTH);
-    var tileYIndex = Math.floor(trueY / SceneManager.TILE_HEIGHT);
+    var tileXIndex1 = Math.floor((trueX - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex1 = Math.floor((trueY - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileXIndex2 = Math.floor((trueX + SceneManager.PLAYER_WIDTH - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex2 = Math.floor((trueY - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileXIndex3 = Math.floor((trueX - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex3 = Math.floor((trueY - SceneManager.PLAYER_HEIGHT - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
+    var tileXIndex4 = Math.floor((trueX  + SceneManager.PLAYER_WIDTH - SceneManager.canvasStartXOffset) / SceneManager.TILE_WIDTH);
+    var tileYIndex4 = Math.floor((trueY - SceneManager.PLAYER_HEIGHT - SceneManager.canvasStartYOffset) / SceneManager.TILE_HEIGHT);
 
-    var arrayIndex = (tileXIndex * SceneManager.MAP_WIDTH) + tileYIndex;
+    // x and y are switched for this calculation
+    var arrayIndex1 = (tileYIndex1 * SceneManager.MAP_WIDTH) + tileXIndex1;
+    var arrayIndex2 = (tileYIndex2 * SceneManager.MAP_WIDTH) + tileXIndex2;
+    var arrayIndex3 = (tileYIndex3 * SceneManager.MAP_WIDTH) + tileXIndex3;
+    var arrayIndex4 = (tileYIndex4 * SceneManager.MAP_WIDTH) + tileXIndex4;
 
-    // FIXME: don't have a way to handle negative indices, or those above expected index
-    // may just only use positive canvas values though
-    if (arrayIndex >= 0 &&
-        arrayIndex < SceneManager.MAP_WIDTH * SceneManager.MAP_HEIGHT){
-        // check to see if collision is set at this location - foreground tilemap
-        if (SceneManager.foregroundTileMapArray[arrayIndex].length > 2){
-            if (SceneManager.foregroundTileMapArray[arrayIndex][2] === 1){
-                console.log("Movement blocked");
-                return false;
-            }
-        }
-
-        // check to see if collision is set at this location - background tilemap
-        if (SceneManager.backgroundTileMapArray[arrayIndex].length > 2){
-            if (SceneManager.backgroundTileMapArray[arrayIndex][2] === 1){
-                console.log("Movement blocked");
-                return false;
-            }
-        }
+    if (GameState.collisionsLookup[arrayIndex1] ||
+        GameState.collisionsLookup[arrayIndex2] ||
+        GameState.collisionsLookup[arrayIndex3] ||
+        GameState.collisionsLookup[arrayIndex4]){
+        // found a collision
+        console.log("collision detected!!!");
+        return false;
     }
+
     return true;
 }
 
