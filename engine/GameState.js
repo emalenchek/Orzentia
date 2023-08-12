@@ -21,13 +21,13 @@ GameState.exampleEnemy = {
     "detectionRange": 250,
     // location on the canvas
     "location": {
-        x: 120,
-        y: 120
+        x: 250,
+        y: 250
     },
     "spriteWidth": 24,
     "spriteHeight": 24,
-    "width": 48,
-    "height": 48
+    "width": 40,
+    "height": 40
 };
 
 GameState.newStateTemplate = {
@@ -255,8 +255,8 @@ GameState.isLocationAvailable = function(newLocation, isTrue, entity){
         var trueY = (yCalc - y) + (SceneManager.MAP_HEIGHT / SceneManager.TILE_HEIGHT) + SceneManager.TILE_HEIGHT;
     }
     else {
-        var trueX = x - (SceneManager.TILE_WIDTH * ((SceneManager.canvasEl.width / 2) / 100));
-        var trueY = y + (SceneManager.TILE_HEIGHT * ((SceneManager.canvasEl.height / 2) / 100)) + SceneManager.TILE_HEIGHT;
+        var trueX = x;
+        var trueY = y + SceneManager.TILE_HEIGHT;
     }
 
     // ignore the remainder, as this should check the whole area associated with new location
