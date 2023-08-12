@@ -72,6 +72,8 @@ GameState.newStateTemplate = {
             "speed": 5,
             "width": 80,
             "height": 80,
+            "spriteWidth": 16,
+            "spriteHeight": 16,
             // this will eventually be a full spritesheet
             "sprites": [
                 "./assets/spells/fireball/Fireball1.png",
@@ -384,7 +386,9 @@ GameState.playerActions.fireMagicProjectile = function(spell){
         "orientation": playerOrientation,
         "speed": speed,
         "width": spell.width,
-        "height": spell.height
+        "height": spell.height,
+        "spriteWidth": spell.spriteWidth,
+        "spriteHeight": spell.spriteHeight
     };
     activeAttacks.push(newAttack);
 };
@@ -404,7 +408,7 @@ GameState.updateActiveAttack = function(attack){
             case "N":
                 var newLocation = {
                     "x": attack.currentLocation.x,
-                    "y": attack.currentLocation.y + speed + (SceneManager.TILE_HEIGHT)
+                    "y": attack.currentLocation.y + speed - (0.5 * SceneManager.TILE_WIDTH),
                 };
 
                 // check for terrain collision
@@ -419,7 +423,7 @@ GameState.updateActiveAttack = function(attack){
             case "S":
                 var newLocation = {
                     "x": attack.currentLocation.x,
-                    "y": attack.currentLocation.y - speed - (SceneManager.TILE_HEIGHT)
+                    "y": attack.currentLocation.y - speed - (2 * SceneManager.TILE_WIDTH)
                 };
                 // check for terrain collision
                 if (GameState.isLocationAvailable(newLocation, null, attack)){

@@ -542,6 +542,10 @@ SceneManager.renderAttackAnimations = function(){
                 // Draw image to canvas
                 this.canvasCtx.drawImage(
                     spriteImage,
+                    0,
+                    0,
+                    attack.spriteWidth,
+                    attack.spriteHeight,
                     posX,
                     posY,
                     attack.width,
