@@ -34,10 +34,10 @@ SceneManager.playerSpritesheet = document.getElementById("player-sprites");
 
 var FPS = 30;
 var FRAME_MIN_TIME = (1000/60) * (60 / FPS) - (1000/60) * 0.5;
-SceneManager.PLAYER_WIDTH = 40;
-SceneManager.PLAYER_HEIGHT = 40;
-SceneManager.PLAYER_SPRITE_WIDTH = 32;
-SceneManager.PLAYER_SPRITE_HEIGHT = 32;
+SceneManager.PLAYER_WIDTH = 11 * 2;
+SceneManager.PLAYER_HEIGHT = 16 * 2;
+SceneManager.PLAYER_SPRITE_WIDTH = 11 * 2;
+SceneManager.PLAYER_SPRITE_HEIGHT = 16 * 2;
 var PLAYER_COLOR = "rgb(200, 0, 0)";
 
 // methods //
@@ -307,7 +307,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
         var rotation = GameState.currentState.player.rotation;
         return {
             "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
-            "sy": 0,
+            "sy": SceneManager.PLAYER_SPRITE_HEIGHT * 0,
             "sWidth": SceneManager.PLAYER_SPRITE_WIDTH,
             "sHeight": SceneManager.PLAYER_SPRITE_HEIGHT,
             "rotation": rotation
@@ -317,6 +317,9 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
         // Use the last registered movement key to decide the direction
         var activeMovement = GameState.activeKeys[GameState.activeKeys.length - 1];
         var data = {};
+
+        var cycleValue = cycleLoop[cycleLoopIndex];
+
         switch (activeMovement){
             case "ArrowUp":
                 GameState.currentState.player.orientation = "N";
@@ -324,7 +327,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
-                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT,
+                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT * cycleValue,
                     "sWidth": SceneManager.PLAYER_SPRITE_WIDTH,
                     "sHeight": SceneManager.PLAYER_SPRITE_HEIGHT,
                     "rotation": rotation
@@ -336,7 +339,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
-                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT,
+                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT * cycleValue,
                     "sWidth": SceneManager.PLAYER_SPRITE_WIDTH,
                     "sHeight": SceneManager.PLAYER_SPRITE_HEIGHT,
                     "rotation": rotation
@@ -348,7 +351,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
-                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT,
+                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT * cycleValue,
                     "sWidth": SceneManager.PLAYER_SPRITE_WIDTH,
                     "sHeight": SceneManager.PLAYER_SPRITE_HEIGHT,
                     "rotation": rotation
@@ -360,7 +363,7 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 var rotation = GameState.currentState.player.rotation;
                 data = {
                     "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
-                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT,
+                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT * cycleValue,
                     "sWidth": SceneManager.PLAYER_SPRITE_WIDTH,
                     "sHeight": SceneManager.PLAYER_SPRITE_HEIGHT,
                     "rotation": rotation
@@ -370,8 +373,8 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
                 GameState.updatePlayerOrientationValue();
                 var rotation = GameState.currentState.player.rotation;
                 data = {
-                    "sx": SceneManager.PLAYER_SPRITE_WIDTH,
-                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT * rotation,
+                    "sx": SceneManager.PLAYER_SPRITE_WIDTH * rotation,
+                    "sy": SceneManager.PLAYER_SPRITE_HEIGHT * 0,
                     "sWidth": SceneManager.PLAYER_SPRITE_WIDTH,
                     "sHeight": SceneManager.PLAYER_SPRITE_HEIGHT,
                     "rotation": rotation
@@ -426,7 +429,7 @@ SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, frameCount){
  */
 SceneManager.updateActiveScene = function(){
     // The last frame time noted
-    var playerWalkCycleLoop = [];
+    var playerWalkCycleLoop = [2, 0, 3, 0];
     var currentLoopIndex = 0;
     var frameCount = 0;
     // player orientation default

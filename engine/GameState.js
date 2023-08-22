@@ -38,10 +38,10 @@ GameState.newStateTemplate = {
         // This will be where all information regarding the player is stored
         // Name, Health, Level(?), inventory, equipped, spells/abilities, etc.
         "health": 50,
-        "width": 40,
-        "height": 40,
-        "spriteWidth": 32,
-        "spriteHeight": 32,
+        "width": 11 * 2,
+        "height": 16 * 2,
+        "spriteWidth": 11 * 2,
+        "spriteHeight": 16 * 2,
         "level": 1,
         "experience": 0,
         "inventory": [],
@@ -63,15 +63,15 @@ GameState.newStateTemplate = {
         // N,S,E,W (direction being faced)
         "orientation": "S",
         "rotation": 0,
-        "spritesheetSource": "./assets/spritesheets/DarwinSprites.png",
+        "spritesheetSource": "./assets/spritesheets/chaseStormSprites.png",
         // unsure on the name for now, but it sounds pretty swag
         "incarnate": {
             "school": "fire",
             "type": "projectile",
             "damage": 5,
             "speed": 5,
-            "width": 80,
-            "height": 80,
+            "width": 40,
+            "height": 40,
             "spriteWidth": 16,
             "spriteHeight": 16,
             // this will eventually be a full spritesheet
@@ -309,13 +309,13 @@ GameState.playerActions.castMagic = function(){
     var orientation = GameState.currentState.player.orientation;
     switch (orientation){
         case "N":
-            // rotation = 1;
+            GameState.currentState.player.rotation = 2;
             break;
         case "S":
-            // rotation = 0;
+            GameState.currentState.player.rotation = 1;
             break;
         case "E":
-            GameState.currentState.player.rotation = 1;
+            GameState.currentState.player.rotation = 3;
             break;
         case "W":
             GameState.currentState.player.rotation = 0;
