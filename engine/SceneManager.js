@@ -386,6 +386,61 @@ SceneManager.determineActivePlayerSprite = function(cycleLoop, cycleLoopIndex){
 };
 
 /**
+ * Render the main menu text
+ */
+SceneManager.renderMainMenuText = function(){
+    var mainMenuDetails = GUI.mainMenuDetails;
+
+    var playerX = GameState.currentState.player.location.x;
+    var playerY = GameState.currentState.player.location.y;
+
+    var posX = SceneManager.TILE_WIDTH * 2 + playerX;
+    var posY = SceneManager.TILE_HEIGHT * 2 - playerY;
+
+    this.canvasCtx.font = "32px " + mainMenuDetails.font;
+
+    for (var i in mainMenuDetails.options){
+        // text style
+        this.canvasCtx.fillStyle = mainMenuDetails.foregroundColor;
+
+        // render text
+        this.canvasCtx.fillText(mainMenuDetails.options[i], posX, posY + (60 * Number(i)));
+
+        var textWidth = this.canvasCtx.measureText(mainMenuDetails.options[i]).width;
+
+        if (Number(i) === mainMenuDetails.cursorIndex){
+            // underline this text to show user the active highlighted element
+            this.canvasCtx.fillStyle = mainMenuDetails.foregroundColor;
+            this.canvasCtx.fillRect(posX, posY + (60 * Number(i)) + 10, textWidth, 2);
+        }
+    }
+};
+
+/**
+ * Render the main menu screen
+ */
+SceneManager.renderMainMenuScreen = function(){
+    var mainMenuDetails = GUI.mainMenuDetails;
+
+    var playerX = GameState.currentState.player.location.x;
+    var playerY = GameState.currentState.player.location.y;
+
+    var posX = SceneManager.TILE_WIDTH + playerX;
+    var posY = SceneManager.TILE_HEIGHT - playerY;
+    var width = mainMenuDetails.width;
+    var height = mainMenuDetails.height;
+
+    // want to clear the pause menu area
+    this.canvasCtx.clearRect(posX, posY, width, height);
+    this.canvasCtx.fillStyle = mainMenuDetails.backgroundColor;
+    // draw the pause menu area
+    this.canvasCtx.fillRect(posX, posY, width, height);
+
+    // Populate pause menu with text
+    SceneManager.renderMainMenuText();
+};
+
+/**
  * A method that loads the player character onto the scene
  */
 SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, frameCount){
@@ -425,6 +480,61 @@ SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, frameCount){
 };
 
 /**
+ * Render the game over menu text
+ */
+SceneManager.renderGameOverMenuText = function(){
+    var gameOverDetails = GUI.gameOverMenuDetails;
+
+    var playerX = GameState.currentState.player.location.x;
+    var playerY = GameState.currentState.player.location.y;
+
+    var posX = SceneManager.TILE_WIDTH * 2 + playerX;
+    var posY = SceneManager.TILE_HEIGHT * 2 - playerY;
+
+    this.canvasCtx.font = "32px " + gameOverDetails.font;
+
+    for (var i in gameOverDetails.options){
+        // text style
+        this.canvasCtx.fillStyle = gameOverDetails.foregroundColor;
+
+        // render text
+        this.canvasCtx.fillText(gameOverDetails.options[i], posX, posY + (60 * Number(i)));
+
+        var textWidth = this.canvasCtx.measureText(gameOverDetails.options[i]).width;
+
+        if (Number(i) === gameOverDetails.cursorIndex){
+            // underline this text to show user the active highlighted element
+            this.canvasCtx.fillStyle = gameOverDetails.foregroundColor;
+            this.canvasCtx.fillRect(posX, posY + (60 * Number(i)) + 10, textWidth, 2);
+        }
+    }
+};
+
+/**
+ * Render the game over screen
+ */
+SceneManager.displayGameOverScreen = function(){
+    var gameOverDetails = GUI.gameOverMenuDetails;
+
+    var playerX = GameState.currentState.player.location.x;
+    var playerY = GameState.currentState.player.location.y;
+
+    var posX = SceneManager.TILE_WIDTH + playerX;
+    var posY = SceneManager.TILE_HEIGHT - playerY;
+    var width = gameOverDetails.width;
+    var height = gameOverDetails.height;
+
+    // want to clear the pause menu area
+    this.canvasCtx.clearRect(posX, posY, width, height);
+    this.canvasCtx.fillStyle = gameOverDetails.backgroundColor;
+    // draw the pause menu area
+    this.canvasCtx.fillRect(posX, posY, width, height);
+
+    // Populate pause menu with text
+    SceneManager.renderGameOverMenuText();
+};
+
+/**
  * Update the state of the current scene
  */
 SceneManager.updateActiveScene = function(){
@@ -450,7 +560,9 @@ SceneManager.updateActiveScene = function(){
 
         SceneManager.renderScene(SceneManager.activeScene);
 
-        if (!GameState.currentState.isPaused){
+        if (GameState.currentState.isActive){
+            GameState.updatePlayerState();
+
             SceneManager.loadPlayer(playerWalkCycleLoop, currentLoopIndex, frameCount);
             
             // Need to check to see if any attacks to be rendered

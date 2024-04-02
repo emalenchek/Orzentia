@@ -13,7 +13,7 @@ GameState.exampleEnemy = {
     "spritesheet": "./assets/spritesheets/slime_monster_spritesheet.png",
     "spriteIndex": 6,
     "spriteIndexArrayLength": 8,
-    // dictates enemy movement patterm
+    // dictates enemy movement pattern
     // idle (stationary), aggressive (moves towards the player), erratic, etc.
     "movementType": "aggressive",
     "detectsPlayer": false,
@@ -27,7 +27,8 @@ GameState.exampleEnemy = {
     "spriteWidth": 24,
     "spriteHeight": 24,
     "width": 40,
-    "height": 40
+    "height": 40,
+    "strength": 1,
 };
 
 GameState.newStateTemplate = {
@@ -37,7 +38,7 @@ GameState.newStateTemplate = {
     "player": {
         // This will be where all information regarding the player is stored
         // Name, Health, Level(?), inventory, equipped, spells/abilities, etc.
-        "health": 50,
+        "health": 5,
         "width": 11 * 2,
         "height": 16 * 2,
         "spriteWidth": 11 * 2,
@@ -45,6 +46,8 @@ GameState.newStateTemplate = {
         "level": 1,
         "experience": 0,
         "inventory": [],
+        "invulnerabilityFrames": 60,
+        "remainingInvulnerabilityFrames": 0,
         "equipment": {
             "weapon": {},
             "head": {},
@@ -105,6 +108,34 @@ GameState.createNewGameState = function(){
     SceneManager.updateActiveScene();
 };
 
+GameState.checkPlayerStatus = function(){
+    if (GameState.currentState.player.health <= 0){
+        // player died
+        console.log("player died");
+        GameState.currentState.isActive = false;
+        // need to display game over screen
+        GameState.currentState.isGameOver = true;
+        SceneManager.displayGameOverScreen();
+    }
+};
+
+/**
+ * Handler updating status of the player entity
+ * (health, experience, iframes etc.)
+ */
+GameState.updatePlayerState = function(){
+    var player = GameState.currentState.player;
+
+    console.log("player health: " + player.health);
+    console.log("player remaining iframes: " + player.remainingInvulnerabilityFrames);
+
+    if (player.remainingInvulnerabilityFrames > 0){
+        player.remainingInvulnerabilityFrames--;
+    }
+
+    GameState.checkPlayerStatus();
+};
+
 /**
  * If movement is requested (and not inhibited by collision)
  * updates character's location within the current game state
@@ -115,7 +146,8 @@ GameState.updatePlayerLocation = function(){
         switch (key){
             case "ArrowUp":
                 if (GameState.currentState){
-                    if (!GameState.currentState.isPaused){
+                    if (!GameState.currentState.isPaused &&
+                        !GameState.currentState.isGameOver){
                         // need to peek at new location to see if available
                         var newLocation = {
                             "x": GameState.currentState.player.location.x,
@@ -655,6 +687,41 @@ GameState.updateEnemyAggressivePosition = function(enemy){
 };
 
 /**
+ * Calculates the damage to the player entity
+ * @param {*} enemy - the enemy that is attacking the player
+ */
+GameState.calculatePlayerDamage = function(enemy){
+    if (GameState.currentState.player.remainingInvulnerabilityFrames <= 0){
+        GameState.currentState.player.health -= enemy.strength;
+        GameState.currentState.player.remainingInvulnerabilityFrames = GameState.currentState.player.invulnerabilityFrames;
+    }
+};
+
+/**
+ * Determine whether the enemy entity is colliding with the player entity on this frame
+ * @param {*} enemy - enemy to check for collision with player
+ */
+GameState.isCollidingWithPlayer = function(enemy){
+    var playerOffsetLocation = GameState.currentState.player.location;
+    var enemyLocation = enemy.location;
+
+    var playerLocation = SceneManager.getTrueLocation(playerOffsetLocation.x, playerOffsetLocation.y);
+
+    // collision check
+    var hit = enemyLocation.x + enemy.width >= playerLocation.x &&
+        playerLocation.x + GameState.currentState.player.width >= enemyLocation.x &&
+        enemyLocation.y + enemy.height >= playerLocation.y &&
+        playerLocation.y + GameState.currentState.player.height >= enemyLocation.y;
+
+    if (hit){
+        console.log ("player hit by " + enemy.name + "!!");
+
+        // calculate damage to player
+        GameState.calculatePlayerDamage(enemy);
+    }
+};
+
+/**
  * Make updates to the active enemy object
  * @param {*} enemy - enemy to be updated
  */
@@ -683,6 +750,8 @@ GameState.updateActiveEnemy = function(enemy){
             if (detected){
                 // update enemy position by speed towards the player
                 GameState.updateEnemyAggressivePosition(enemy);
+
+                GameState.isCollidingWithPlayer(enemy);
             }
 
             break;
@@ -749,6 +818,7 @@ GameState.calculateEnemyDamage = function(attack, enemy){
  * Sets gameState isPaused = true
  */
 GameState.pauseGame = function(){
+    GameState.currentState.isActive = false;
     GameState.currentState.isPaused = true;
 };
 
@@ -756,6 +826,7 @@ GameState.pauseGame = function(){
  * Sets GameState isPaused = false
  */
 GameState.unpauseGame = function(){
+    GameState.currentState.isActive = true;
     GameState.currentState.isPaused = false;
 };
 

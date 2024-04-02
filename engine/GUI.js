@@ -22,3 +22,32 @@ GUI.pauseMenuDetails = {
     font: "JGS-7-FONT",
     cursorIndex: 0
 };
+
+GUI.gameOverMenuDetails = {
+    title: "Game Over",
+    width: 400,
+    height: 400,
+    options: [
+        "Restart"
+    ],
+    backgroundColor: "black",
+    foregroundColor: "white",
+    font: "JGS-7-FONT",
+    cursorIndex: 0
+};
+
+GUI.mainMenuDetails = {
+    title: "Main Menu",
+    width: 400,
+    height: 400,
+    options: [
+        "Start Game",
+        "Settings",
+        "Exit"
+    ],
+    backgroundColor: "black",
+    foregroundColor: "white",
+    font: "JGS-7-FONT",
+    cursorIndex: 0
+};
+
