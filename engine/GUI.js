@@ -43,7 +43,6 @@ GUI.mainMenuDetails = {
     options: [
         "Start Game",
         "Settings",
-        "Exit"
     ],
     backgroundColor: "black",
     foregroundColor: "white",

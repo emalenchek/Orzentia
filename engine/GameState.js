@@ -31,6 +31,10 @@ GameState.exampleEnemy = {
     "strength": 1,
 };
 
+GameState.destroyGameState = function(){
+    GameState.currentState = null;
+};
+
 GameState.newStateTemplate = {
     "start": null,
     "end": null,
@@ -46,7 +50,7 @@ GameState.newStateTemplate = {
         "level": 1,
         "experience": 0,
         "inventory": [],
-        "invulnerabilityFrames": 60,
+        "invulnerabilityFrames": 40,
         "remainingInvulnerabilityFrames": 0,
         "equipment": {
             "weapon": {},
@@ -87,6 +91,7 @@ GameState.newStateTemplate = {
     },
     // changes can and will happen to player data in an active game state
     "isActive": false,
+    "activeMenu": null,
     "activeAttacks": [],
     "spawnedEnemies": [],
     "isPaused": false
@@ -108,14 +113,22 @@ GameState.createNewGameState = function(){
     SceneManager.updateActiveScene();
 };
 
+/**
+ * Ends the current game state
+ */
+GameState.endGame = function(){
+    GameState.currentState.end = Date.now();
+    GameState.currentState.isActive = false;
+    GameState.currentState.isGameOver = true;
+    SceneManager.displayGameOverScreen();
+};
+
 GameState.checkPlayerStatus = function(){
     if (GameState.currentState.player.health <= 0){
         // player died
         console.log("player died");
-        GameState.currentState.isActive = false;
         // need to display game over screen
-        GameState.currentState.isGameOver = true;
-        SceneManager.displayGameOverScreen();
+        GameState.endGame();
     }
 };
 
@@ -146,8 +159,7 @@ GameState.updatePlayerLocation = function(){
         switch (key){
             case "ArrowUp":
                 if (GameState.currentState){
-                    if (!GameState.currentState.isPaused &&
-                        !GameState.currentState.isGameOver){
+                    if (GameState.currentState.isActive){
                         // need to peek at new location to see if available
                         var newLocation = {
                             "x": GameState.currentState.player.location.x,
@@ -171,7 +183,7 @@ GameState.updatePlayerLocation = function(){
                 break;
             case "ArrowDown":
                 if (GameState.currentState){
-                    if (!GameState.currentState.isPaused){
+                    if (GameState.currentState.isActive){
                         // need to peek at new location to see if available
                         var newLocation = {
                             "x": GameState.currentState.player.location.x,
@@ -195,7 +207,7 @@ GameState.updatePlayerLocation = function(){
                 break;
             case "ArrowRight":
                 if (GameState.currentState){
-                    if (!GameState.currentState.isPaused){
+                    if (GameState.currentState.isActive){
                         // need to peek at new location to see if available
                         var newLocation = {
                             "x": GameState.currentState.player.location.x +
@@ -213,7 +225,7 @@ GameState.updatePlayerLocation = function(){
             case "ArrowLeft":
                 // need to peek at new location to see if available
                 if (GameState.currentState){
-                    if (!GameState.currentState.isPaused){
+                    if (GameState.currentState.isActive){
                         var newLocation = {
                             "x": GameState.currentState.player.location.x -
                                 GameState.currentState.player.speed,
@@ -259,6 +271,7 @@ GameState.updatePlayerLocation = function(){
             case "Enter":
                 GameState.activeKeys = [];
                 GameState.togglePaused();
+                GameState.activeKeys = [];
                     break;
             default:
                 break;
@@ -815,19 +828,193 @@ GameState.calculateEnemyDamage = function(attack, enemy){
 }
 
 /**
+ * Set active menu based on menu type passed in, and register input handlers
+ * for the corresponding menu
+ * @param {*} menu 
+ */
+GameState.setActiveMenu = function(menu){
+    GameState.currentState.activeMenu = menu;
+    GameState.registerMenuInputHandlers(menu);
+};
+
+/**
+ * Registers input handlers for the main menu
+ */
+GameState.registerPauseMenuInputHandlers = function(){
+    // use gameState.activeKeys map to determine the user input
+    // and handle the corresponding action
+    GameState.activeKeys.map(function(key){
+        switch (key){
+            case "ArrowUp":
+                if (GUI.pauseMenuDetails.cursorIndex > 0){
+                    GUI.pauseMenuDetails.cursorIndex--;
+                }
+                break;
+            case "ArrowDown":
+                if (GUI.pauseMenuDetails.cursorIndex < GUI.pauseMenuDetails.options.length - 1){
+                    GUI.pauseMenuDetails.cursorIndex++;
+                }
+                break;
+            case "Z":
+            case "z":
+                switch (GUI.pauseMenuDetails.options[GUI.pauseMenuDetails.cursorIndex]){
+                    case "Inventory":
+                        break;
+                    case "Character":
+                        break;
+                    case "Settings":
+                        break;
+                    case "Save":
+                        break;
+                    case "Return to Main Menu":
+                        Game.end();
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case "Enter":
+            case "Return":
+            case "X":
+            case "x":
+                // close the current menu
+                GameState.togglePaused();
+
+                // clear active keys
+                GameState.activeKeys = [];
+
+                GameState.clearActiveMenu();
+                GameState.currentState.isPaused = false;
+                GameState.currentState.isActive = true;
+                break;
+            default:
+                break;
+        }
+    });
+};
+
+
+/**
+ * Registers input handlers for the main menu
+ */
+GameState.registerMainMenuInputHandlers = function(){
+    // use gameState.activeKeys map to determine the user input
+    // and handle the corresponding action
+    GameState.activeKeys.map(function(key){
+        switch (key){
+            case "ArrowUp":
+                if (GUI.mainMenuDetails.cursorIndex > 0){
+                    GUI.mainMenuDetails.cursorIndex--;
+                }
+                break;
+            case "ArrowDown":
+                if (GUI.mainMenuDetails.cursorIndex < GUI.mainMenuDetails.options.length - 1){
+                    GUI.mainMenuDetails.cursorIndex++;
+                }
+                break;
+            case "Z":
+            case "z":
+                switch (GUI.mainMenuDetails.options[GUI.mainMenuDetails.cursorIndex]){
+                    case "Start Game":
+                        Game.start();
+                        break;
+                    case "Settings":
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case "Enter":
+            case "Return":
+                // close the current menu
+                // GameState.clearActiveMenu();
+                break;
+            default:
+                break;
+        }
+    });
+};
+
+/**
+ * Registers input handlers for the game over menu
+ */
+GameState.registerGameOverMenuInputHandlers = function(){
+    // use gameState.activeKeys map to determine the user input
+    // and handle the corresponding action
+    GameState.activeKeys.map(function(key){
+        switch (key){
+            case "Z":
+            case "z":
+                switch (GUI.gameOverMenuDetails.options[GUI.gameOverMenuDetails.cursorIndex]){
+                    case "Restart":
+                        Game.start();
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case "Enter":
+            case "Return":
+                // close the current menu
+                // GameState.clearActiveMenu();
+                break;
+            default:
+                break;
+        }
+    });
+};
+
+/**
+ * Register menu input handlers for all menus
+ * @param {*} menu 
+ */
+GameState.registerMenuInputHandlers = function(menu){
+    // switch based on menu type to determine input handlers
+    switch (menu){
+        case "pause":
+            // need to register input handlers for the pause menu
+            GameState.registerPauseMenuInputHandlers();
+            break;
+        case "main":
+            GameState.registerMainMenuInputHandlers();
+        case "gameOver":
+            GameState.registerGameOverMenuInputHandlers();
+        default:
+            break;
+    }
+};
+
+/**
+ * Clear the active menu assignment for the current game state
+ */
+GameState.clearActiveMenu = function(){
+    if (GameState.currentState){
+        GameState.currentState.activeMenu = null;
+    }
+};
+
+
+/**
  * Sets gameState isPaused = true
  */
 GameState.pauseGame = function(){
+    GameState.currentState.activeMenu = "pause";
+    var menu = GameState.currentState.activeMenu;
     GameState.currentState.isActive = false;
     GameState.currentState.isPaused = true;
+
+    // set input handlers to navigate and interact with menu
+    // options
+    GameState.registerMenuInputHandlers(menu);
 };
 
 /**
  * Sets GameState isPaused = false
  */
 GameState.unpauseGame = function(){
-    GameState.currentState.isActive = true;
+    GameState.clearActiveMenu();
     GameState.currentState.isPaused = false;
+    GameState.currentState.isActive = true;
 };
 
 /**
@@ -835,7 +1022,11 @@ GameState.unpauseGame = function(){
  * @returns void
  */
 GameState.togglePaused = function(){
-    if (!GameState.currentState.isPaused){
+    if (GameState.currentState.isGameOver){
+        return;
+    }
+
+    if (GameState.currentState.isActive){
         GameState.pauseGame();
         return;
     }

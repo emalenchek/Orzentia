@@ -19,85 +19,97 @@ Game.restart = function(){
 
 Game.end = function(){
     // nothing yet
+    Game.clearInputHandlers();
+    GameState.destroyGameState(GameState.currentState);
+    SceneManager.displayMainMenu();
+};
+
+Game.clearInputHandlers = function(){
+    window.removeEventListener("keydown", Game.keyDownHandler);
+    window.removeEventListener("keyup", Game.keyUpHandler);
+};
+
+Game.keyDownHandler = function(event){
+    event.preventDefault();
+    switch(event.key){
+        // move up
+        case "ArrowUp":
+        // move down
+        case "ArrowDown":
+        // move left
+        case "ArrowLeft":
+        // move right
+        case "ArrowRight":
+        // Interact (Talk/Press/etc.)
+        case "f":
+        case "F":
+        // light attack
+        // simple slash (horizontal-arc)
+        case "z":
+        case "Z":
+        // heavy attack (spin-attack) slower
+        case "x":
+        case "X":
+        // magic attack
+        case "c":
+        case "C":
+        // pause/unpause
+        case "return":
+        case "Return":
+        case "enter":
+        case "Enter":
+            var length = GameState.activeKeys.filter(function(key){
+                return key === event.key;
+            }).length;
+            if (!length){
+                GameState.activeKeys.push(event.key);
+            }
+            console.log(GameState.activeKeys);
+            break;
+        default:
+            break;
+    }
+};
+
+Game.keyUpHandler = function(event){
+    event.preventDefault();
+    switch(event.key){
+        case "ArrowUp":
+        case "ArrowDown":
+        case "ArrowLeft":
+        case "ArrowRight":
+        // Interact (Talk/Press/etc.)
+        case "f":
+        case "F":
+        // light attack
+        // simple slash (horizontal-arc)
+        case "z":
+        case "Z":
+        // heavy attack (spin-attack) slower
+        case "x":
+        case "X":
+        // magic attack
+        case "c":
+        case "C":
+        // pause/unpause
+        case "return":
+        case "enter":
+            GameState.activeKeys.splice(
+                GameState.activeKeys.indexOf(event.key),
+                1
+            );
+            console.log(GameState.activeKeys);
+            break;
+        default:
+            break;
+    }
 };
 
 Game.setInputHandlers = function(){
-    window.addEventListener("keydown", function(event){
-        event.preventDefault();
-        switch(event.key){
-            // move up
-            case "ArrowUp":
-            // move down
-            case "ArrowDown":
-            // move left
-            case "ArrowLeft":
-            // move right
-            case "ArrowRight":
-            // Interact (Talk/Press/etc.)
-            case "f":
-            case "F":
-            // light attack
-            // simple slash (horizontal-arc)
-            case "z":
-            case "Z":
-            // heavy attack (spin-attack) slower
-            case "x":
-            case "X":
-            // magic attack
-            case "c":
-            case "C":
-            // pause/unpause
-            case "return":
-            case "Return":
-            case "enter":
-            case "Enter":
-                var length = GameState.activeKeys.filter(function(key){
-                    return key === event.key;
-                }).length;
-                if (!length){
-                    GameState.activeKeys.push(event.key);
-                }
-                console.log(GameState.activeKeys);
-                break;
-            default:
-                break;
-        }
-    });
+    window.addEventListener("keydown", Game.keyDownHandler);
 
-    window.addEventListener("keyup", function(event){
-        event.preventDefault();
-        switch(event.key){
-            case "ArrowUp":
-            case "ArrowDown":
-            case "ArrowLeft":
-            case "ArrowRight":
-            // Interact (Talk/Press/etc.)
-            case "f":
-            case "F":
-            // light attack
-            // simple slash (horizontal-arc)
-            case "z":
-            case "Z":
-            // heavy attack (spin-attack) slower
-            case "x":
-            case "X":
-            // magic attack
-            case "c":
-            case "C":
-            // pause/unpause
-            case "return":
-            case "enter":
-                GameState.activeKeys.splice(
-                    GameState.activeKeys.indexOf(event.key),
-                    1
-                );
-                console.log(GameState.activeKeys);
-                break;
-            default:
-                break;
-        }
-    });
-}
+    window.addEventListener("keyup", Game.keyUpHandler);
+};
 
 /**
  * Returns the calculated distance between two points

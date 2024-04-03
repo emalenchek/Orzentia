@@ -244,12 +244,8 @@ SceneManager.renderPauseMenu = function(){
  * @param {Scene} scene - scene object to be rendered 
  */
 SceneManager.renderScene = function(scene){
-    // nothing yet.. eventually we will use information from the scene to load in proper assets
-    // and load data/update state of our game
-    // but for now: we are just a square
-
-    // if game is not paused
-    if (!GameState.currentState.isPaused){
+    // if game is active
+    if (GameState.currentState.isActive){
         // reset canvas
         this.canvasCtx.clearRect(0, 0, this.canvasCtx.width, this.canvasCtx.height);
 
@@ -271,7 +267,11 @@ SceneManager.renderScene = function(scene){
         transform.f = y;
         this.canvasCtx.setTransform(transform);
     }
-    else {
+    else if (GameState.currentState.isGameOver){
+        // game over
+        SceneManager.displayGameOverScreen();
+    }
+    else if (GameState.currentState.isPaused){
         // game is paused
         SceneManager.renderPauseMenu();
     }
@@ -419,25 +419,11 @@ SceneManager.renderMainMenuText = function(){
 /**
  * Render the main menu screen
  */
-SceneManager.renderMainMenuScreen = function(){
-    var mainMenuDetails = GUI.mainMenuDetails;
+SceneManager.displayMainMenu = function(){
+    // nothing yet
 
-    var playerX = GameState.currentState.player.location.x;
-    var playerY = GameState.currentState.player.location.y;
-
-    var posX = SceneManager.TILE_WIDTH + playerX;
-    var posY = SceneManager.TILE_HEIGHT - playerY;
-    var width = mainMenuDetails.width;
-    var height = mainMenuDetails.height;
-
-    // want to clear the pause menu area
-    this.canvasCtx.clearRect(posX, posY, width, height);
-    this.canvasCtx.fillStyle = mainMenuDetails.backgroundColor;
-    // draw the pause menu area
-    this.canvasCtx.fillRect(posX, posY, width, height);
-
-    // Populate pause menu with text
-    SceneManager.renderMainMenuText();
+    // render default black background for canvas
+    // with menu options corresponding to the main menu    
 };
 
 /**
@@ -546,6 +532,11 @@ SceneManager.updateActiveScene = function(){
     var lastFrameTime = 0;
 
     var callback = function(time){
+        if (!GameState.currentState){
+            // Game has ended
+            return;
+        }
+
         frameCount++;
         if (time - lastFrameTime < FRAME_MIN_TIME){
             requestAnimationFrame(callback);
@@ -554,8 +545,16 @@ SceneManager.updateActiveScene = function(){
         lastFrameTime = time;
 
         // update player's location if necessary
-        if (GameState.activeKeys.length){
-            GameState.updatePlayerLocation();
+        if (GameState.currentState.isActive){
+            if (GameState.activeKeys.length){
+                GameState.updatePlayerLocation();
+            }
+        }
+        else if (GameState.currentState.activeMenu){
+            var menu = GameState.currentState.activeMenu;
+            if (GameState.activeKeys.length){
+                GameState.registerMenuInputHandlers(menu);
+            }
         }
 
         SceneManager.renderScene(SceneManager.activeScene);
