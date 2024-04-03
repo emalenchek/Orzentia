@@ -139,9 +139,6 @@ GameState.checkPlayerStatus = function(){
 GameState.updatePlayerState = function(){
     var player = GameState.currentState.player;
 
-    console.log("player health: " + player.health);
-    console.log("player remaining iframes: " + player.remainingInvulnerabilityFrames);
-
     if (player.remainingInvulnerabilityFrames > 0){
         player.remainingInvulnerabilityFrames--;
     }
