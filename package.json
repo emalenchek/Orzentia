@@ -1,0 +1,10 @@
+{
+  "name": "orzentia",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "http-server . -p 8080 -o",
+    "test:unit": "node --test tests/game.test.js tests/gamestate.test.js tests/scenemanager.test.js",
+    "test:e2e": "NODE_PATH=/opt/node22/lib/node_modules playwright test",
+    "test": "npm run test:unit && npm run test:e2e"
+  }
+}
