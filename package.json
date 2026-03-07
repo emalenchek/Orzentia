@@ -1,0 +1,7 @@
+{
+  "name": "orzentia",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "node --test tests/game.test.js tests/gamestate.test.js tests/scenemanager.test.js"
+  }
+}

@@ -1,0 +1,426 @@
+'use strict';
+
+const { describe, it, beforeEach } = require('node:test');
+const assert = require('node:assert/strict');
+const { loadEngine, makeGameState, makeEnemy } = require('./helpers/setup');
+
+// ─── isLocationAvailable ──────────────────────────────────────────────────────
+// Checks a 4-point AABB against GameState.collisionsLookup.
+// Indices below were derived by tracing through the function with:
+//   canvasEl.width=500, PLAYER_WIDTH=22, PLAYER_HEIGHT=32,
+//   canvasStartXOffset=-440, canvasStartYOffset=-1120,
+//   MAP_WIDTH=48, TILE_WIDTH=40, TILE_HEIGHT=40
+describe('GameState.isLocationAvailable', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('returns true when collisionsLookup is empty (no obstacles)', () => {
+        GameState.collisionsLookup = {};
+        const result = GameState.isLocationAvailable(
+            { x: 0, y: 0 },
+            false,
+            { width: 22, height: 32 }
+        );
+        assert.strictEqual(result, true);
+    });
+
+    it('returns false when the entity footprint overlaps a collision tile (isTrue=false)', () => {
+        // At player position (0, 0) all 4 corners resolve to arrayIndex 1649
+        GameState.collisionsLookup = { 1649: 1053 };
+        const result = GameState.isLocationAvailable(
+            { x: 0, y: 0 },
+            false,
+            { width: 22, height: 32 }
+        );
+        assert.strictEqual(result, false);
+    });
+
+    it('returns true when collision is at a different tile than the entity (isTrue=false)', () => {
+        // Populate a tile far away from index 1649
+        GameState.collisionsLookup = { 0: 1053 };
+        const result = GameState.isLocationAvailable(
+            { x: 0, y: 0 },
+            false,
+            { width: 22, height: 32 }
+        );
+        assert.strictEqual(result, true);
+    });
+
+    it('returns true for enemy move check when no collisions (isTrue=true)', () => {
+        GameState.collisionsLookup = {};
+        // isTrue=true uses x/y directly (enemy canvas coordinates)
+        const result = GameState.isLocationAvailable(
+            { x: 300, y: 300 },
+            true,
+            { width: 40, height: 40 }
+        );
+        assert.strictEqual(result, true);
+    });
+
+    it('returns false for enemy move check when collision tile present (isTrue=true)', () => {
+        // At enemy (300, 300) with isTrue=true, top-left corner → arrayIndex 1746
+        GameState.collisionsLookup = { 1746: 1053 };
+        const result = GameState.isLocationAvailable(
+            { x: 300, y: 300 },
+            true,
+            { width: 40, height: 40 }
+        );
+        assert.strictEqual(result, false);
+    });
+});
+
+// ─── calculatePlayerDamage ────────────────────────────────────────────────────
+describe('GameState.calculatePlayerDamage', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('reduces player health by enemy strength when not invulnerable', () => {
+        const enemy = makeEnemy({ strength: 2 });
+        GameState.calculatePlayerDamage(enemy);
+        assert.strictEqual(GameState.currentState.player.health, 3);
+    });
+
+    it('sets remainingInvulnerabilityFrames after taking damage', () => {
+        const enemy = makeEnemy({ strength: 1 });
+        GameState.calculatePlayerDamage(enemy);
+        assert.strictEqual(
+            GameState.currentState.player.remainingInvulnerabilityFrames,
+            GameState.currentState.player.invulnerabilityFrames
+        );
+    });
+
+    it('does NOT reduce health when player still has invulnerability frames', () => {
+        GameState.currentState.player.remainingInvulnerabilityFrames = 10;
+        const enemy = makeEnemy({ strength: 3 });
+        GameState.calculatePlayerDamage(enemy);
+        assert.strictEqual(GameState.currentState.player.health, 5); // unchanged
+    });
+
+    it('does NOT change remainingInvulnerabilityFrames when already invulnerable', () => {
+        GameState.currentState.player.remainingInvulnerabilityFrames = 10;
+        const enemy = makeEnemy({ strength: 1 });
+        GameState.calculatePlayerDamage(enemy);
+        assert.strictEqual(GameState.currentState.player.remainingInvulnerabilityFrames, 10);
+    });
+});
+
+// ─── calculateEnemyDamage ─────────────────────────────────────────────────────
+describe('GameState.calculateEnemyDamage', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('reduces enemy health by attack damage', () => {
+        const enemy = makeEnemy({ health: 10, index: 0 });
+        GameState.currentState.spawnedEnemies.push(enemy);
+        const attack = { damage: 3 };
+        GameState.calculateEnemyDamage(attack, enemy);
+        assert.strictEqual(enemy.health, 7);
+    });
+
+    it('despawns enemy when health reaches 0', () => {
+        const enemy = makeEnemy({ health: 5, index: 0 });
+        GameState.currentState.spawnedEnemies.push(enemy);
+        const attack = { damage: 5 };
+        GameState.calculateEnemyDamage(attack, enemy);
+        assert.strictEqual(GameState.currentState.spawnedEnemies.length, 0);
+    });
+
+    it('despawns enemy when attack damage exceeds remaining health', () => {
+        const enemy = makeEnemy({ health: 3, index: 0 });
+        GameState.currentState.spawnedEnemies.push(enemy);
+        const attack = { damage: 10 };
+        GameState.calculateEnemyDamage(attack, enemy);
+        assert.strictEqual(GameState.currentState.spawnedEnemies.length, 0);
+    });
+
+    it('keeps enemy alive when damage does not deplete health', () => {
+        const enemy = makeEnemy({ health: 10, index: 0 });
+        GameState.currentState.spawnedEnemies.push(enemy);
+        const attack = { damage: 4 };
+        GameState.calculateEnemyDamage(attack, enemy);
+        assert.strictEqual(GameState.currentState.spawnedEnemies.length, 1);
+    });
+});
+
+// ─── spawnEnemy / despawnActiveEnemy ─────────────────────────────────────────
+describe('GameState.spawnEnemy', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('adds an enemy to spawnedEnemies', () => {
+        const enemy = makeEnemy();
+        GameState.spawnEnemy(enemy);
+        assert.strictEqual(GameState.currentState.spawnedEnemies.length, 1);
+        assert.strictEqual(GameState.currentState.spawnedEnemies[0], enemy);
+    });
+
+    it('adds multiple enemies to spawnedEnemies', () => {
+        GameState.spawnEnemy(makeEnemy({ name: 'A' }));
+        GameState.spawnEnemy(makeEnemy({ name: 'B' }));
+        assert.strictEqual(GameState.currentState.spawnedEnemies.length, 2);
+    });
+});
+
+describe('GameState.despawnActiveEnemy', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('removes the target enemy from spawnedEnemies', () => {
+        const e0 = makeEnemy({ name: 'A', index: 0 });
+        const e1 = makeEnemy({ name: 'B', index: 1 });
+        GameState.currentState.spawnedEnemies.push(e0, e1);
+        GameState.despawnActiveEnemy(e1);
+        assert.strictEqual(GameState.currentState.spawnedEnemies.length, 1);
+        assert.strictEqual(GameState.currentState.spawnedEnemies[0].name, 'A');
+    });
+
+    it('reindexes remaining enemies after despawn', () => {
+        const e0 = makeEnemy({ name: 'A', index: 0 });
+        const e1 = makeEnemy({ name: 'B', index: 1 });
+        const e2 = makeEnemy({ name: 'C', index: 2 });
+        GameState.currentState.spawnedEnemies.push(e0, e1, e2);
+        GameState.despawnActiveEnemy(e0);
+        // e1 and e2 should be reindexed to 0 and 1
+        assert.strictEqual(GameState.currentState.spawnedEnemies[0].index, 0);
+        assert.strictEqual(GameState.currentState.spawnedEnemies[1].index, 1);
+    });
+
+    it('leaves spawnedEnemies empty when only enemy is despawned', () => {
+        const e0 = makeEnemy({ index: 0 });
+        GameState.currentState.spawnedEnemies.push(e0);
+        GameState.despawnActiveEnemy(e0);
+        assert.strictEqual(GameState.currentState.spawnedEnemies.length, 0);
+    });
+});
+
+// ─── despawnActiveAttack ──────────────────────────────────────────────────────
+describe('GameState.despawnActiveAttack', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    function makeAttack(overrides) {
+        return Object.assign(
+            { index: 0, type: 'projectile', damage: 5, currentLocation: { x: 0, y: 0 } },
+            overrides
+        );
+    }
+
+    it('removes the target attack from activeAttacks', () => {
+        const a0 = makeAttack({ index: 0 });
+        const a1 = makeAttack({ index: 1 });
+        GameState.currentState.activeAttacks.push(a0, a1);
+        GameState.despawnActiveAttack(a0);
+        assert.strictEqual(GameState.currentState.activeAttacks.length, 1);
+    });
+
+    it('reindexes remaining attacks after despawn', () => {
+        const a0 = makeAttack({ index: 0 });
+        const a1 = makeAttack({ index: 1 });
+        const a2 = makeAttack({ index: 2 });
+        GameState.currentState.activeAttacks.push(a0, a1, a2);
+        GameState.despawnActiveAttack(a1);
+        assert.strictEqual(GameState.currentState.activeAttacks[0].index, 0);
+        assert.strictEqual(GameState.currentState.activeAttacks[1].index, 1);
+    });
+
+    it('leaves activeAttacks empty when only attack is despawned', () => {
+        const a0 = makeAttack({ index: 0 });
+        GameState.currentState.activeAttacks.push(a0);
+        GameState.despawnActiveAttack(a0);
+        assert.strictEqual(GameState.currentState.activeAttacks.length, 0);
+    });
+});
+
+// ─── pauseGame / unpauseGame / togglePaused ───────────────────────────────────
+describe('GameState.pauseGame', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState({ isActive: true, isPaused: false });
+    });
+
+    it('sets isPaused to true', () => {
+        GameState.pauseGame();
+        assert.strictEqual(GameState.currentState.isPaused, true);
+    });
+
+    it('sets isActive to false', () => {
+        GameState.pauseGame();
+        assert.strictEqual(GameState.currentState.isActive, false);
+    });
+
+    it('sets activeMenu to "pause"', () => {
+        GameState.pauseGame();
+        assert.strictEqual(GameState.currentState.activeMenu, 'pause');
+    });
+});
+
+describe('GameState.unpauseGame', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState({ isActive: false, isPaused: true, activeMenu: 'pause' });
+    });
+
+    it('sets isPaused to false', () => {
+        GameState.unpauseGame();
+        assert.strictEqual(GameState.currentState.isPaused, false);
+    });
+
+    it('sets isActive to true', () => {
+        GameState.unpauseGame();
+        assert.strictEqual(GameState.currentState.isActive, true);
+    });
+
+    it('clears activeMenu', () => {
+        GameState.unpauseGame();
+        assert.strictEqual(GameState.currentState.activeMenu, null);
+    });
+});
+
+describe('GameState.togglePaused', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+    });
+
+    it('pauses an active game', () => {
+        GameState.currentState = makeGameState({ isActive: true, isPaused: false });
+        GameState.togglePaused();
+        assert.strictEqual(GameState.currentState.isPaused, true);
+        assert.strictEqual(GameState.currentState.isActive, false);
+    });
+
+    it('unpauses a paused game', () => {
+        GameState.currentState = makeGameState({ isActive: false, isPaused: true, activeMenu: 'pause' });
+        GameState.togglePaused();
+        assert.strictEqual(GameState.currentState.isPaused, false);
+        assert.strictEqual(GameState.currentState.isActive, true);
+    });
+
+    it('does nothing when the game is already over', () => {
+        GameState.currentState = makeGameState({
+            isActive: false,
+            isPaused: false,
+            isGameOver: true
+        });
+        GameState.togglePaused();
+        // State must remain unchanged
+        assert.strictEqual(GameState.currentState.isGameOver, true);
+        assert.strictEqual(GameState.currentState.isActive, false);
+        assert.strictEqual(GameState.currentState.isPaused, false);
+    });
+});
+
+// ─── checkPlayerStatus / endGame ─────────────────────────────────────────────
+describe('GameState.checkPlayerStatus', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('ends the game when player health reaches 0', () => {
+        GameState.currentState.player.health = 0;
+        GameState.checkPlayerStatus();
+        assert.strictEqual(GameState.currentState.isActive, false);
+        assert.strictEqual(GameState.currentState.isGameOver, true);
+    });
+
+    it('ends the game when player health is negative', () => {
+        GameState.currentState.player.health = -3;
+        GameState.checkPlayerStatus();
+        assert.strictEqual(GameState.currentState.isGameOver, true);
+    });
+
+    it('does NOT end the game when player health is above 0', () => {
+        GameState.currentState.player.health = 1;
+        GameState.checkPlayerStatus();
+        assert.strictEqual(GameState.currentState.isActive, true);
+        assert.strictEqual(GameState.currentState.isGameOver, false);
+    });
+});
+
+// ─── getPossibleEnemyMoves ────────────────────────────────────────────────────
+describe('GameState.getPossibleEnemyMoves', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+        GameState.collisionsLookup = {}; // no terrain collisions
+    });
+
+    it('returns 4 moves for an aggressive enemy with no obstacles', () => {
+        const enemy = makeEnemy({ movementType: 'aggressive', location: { x: 300, y: 300 } });
+        const moves = GameState.getPossibleEnemyMoves(enemy);
+        assert.strictEqual(moves.length, 4);
+    });
+
+    it('returns 4 moves for an erratic enemy with no obstacles', () => {
+        const enemy = makeEnemy({ movementType: 'erratic', location: { x: 300, y: 300 } });
+        const moves = GameState.getPossibleEnemyMoves(enemy);
+        assert.strictEqual(moves.length, 4);
+    });
+
+    it('returns an empty array for an idle enemy (idle does not move)', () => {
+        const enemy = makeEnemy({ movementType: 'idle', location: { x: 300, y: 300 } });
+        const moves = GameState.getPossibleEnemyMoves(enemy);
+        assert.strictEqual(moves.length, 0);
+    });
+
+    it('returns an empty array for a custom movement type enemy', () => {
+        const enemy = makeEnemy({ movementType: 'custom', location: { x: 300, y: 300 } });
+        const moves = GameState.getPossibleEnemyMoves(enemy);
+        assert.strictEqual(moves.length, 0);
+    });
+
+    it('each returned move differs from the original location', () => {
+        const enemy = makeEnemy({ movementType: 'aggressive', location: { x: 300, y: 300 } });
+        const moves = GameState.getPossibleEnemyMoves(enemy);
+        for (const move of moves) {
+            const xChanged = move.x !== enemy.location.x;
+            const yChanged = move.y !== enemy.location.y;
+            assert.ok(xChanged || yChanged, 'move should differ from original location');
+        }
+    });
+});
