@@ -17,11 +17,18 @@ Orzentia/
 ├── index.html              # Entry point — loads all scripts and hidden sprite images
 ├── index.js                # Bootstrap — calls Game.start()
 ├── styles.css              # Global styles (canvas centering, custom font)
+├── package.json            # Minimal — only defines the "test" npm script
 ├── engine/                 # Core game systems (one file per system)
 │   ├── Game.js             # Input handling, game loop entry, collision map data
 │   ├── GameState.js        # All runtime state (player, enemies, attacks, menus)
 │   ├── SceneManager.js     # Rendering, animation, camera, viewport
 │   └── GUI.js              # Static menu/UI definitions
+├── tests/                  # Unit test suite (Node.js built-in test runner)
+│   ├── helpers/
+│   │   └── setup.js        # VM sandbox + browser mock loader
+│   ├── game.test.js        # Tests for Game module
+│   ├── gamestate.test.js   # Tests for GameState module
+│   └── scenemanager.test.js # Tests for SceneManager module
 └── assets/
     ├── OrzentiaOverworld.png         # Tileset image
     ├── OrzentiaOverworldData.tmj     # Tiled map file (48×48 grid)
@@ -43,8 +50,8 @@ Orzentia/
 | Maps          | Tiled Map Editor (.tmj JSON format) |
 | Fonts         | JGS pixel font (custom bitmap)      |
 | Build tools   | None                                |
-| Package mgr   | None                                |
-| Test runner   | None                                |
+| Package mgr   | npm (test script only, no deps)     |
+| Test runner   | Node.js built-in (`node:test`)      |
 | CI/CD         | None                                |
 
 ---
@@ -208,6 +215,46 @@ Input is tracked via an `activeKeys` array on the game state (acts as an input b
    # then open http://localhost:8080
    ```
 
+### Running the Tests
+Requires Node.js 18 or later (uses the built-in `node:test` module — no `npm install` needed).
+
+```bash
+npm test
+```
+
+This runs all three test files directly:
+```
+tests/game.test.js          — Game.getDistanceBetweenPoints (7 tests)
+tests/gamestate.test.js     — collision, damage, spawn/despawn, pause, AI (38 tests)
+tests/scenemanager.test.js  — SceneManager.getTrueLocation (9 tests)
+```
+
+Output is TAP format. A passing run ends with `# fail 0`.
+
+### How the Test Suite Works
+
+The engine files were written for the browser (global namespace, DOM APIs). To test them in Node.js, `tests/helpers/setup.js` uses the `vm` module to:
+1. Mock browser globals (`document`, `window`, `Image`, `requestAnimationFrame`) in an isolated context
+2. Load the engine files in dependency order so their `var` declarations become sandbox properties
+3. Reset all mutable state after loading
+
+Each test file calls `loadEngine()` in `beforeEach` to get a fresh, isolated engine instance. Use `makeGameState()` and `makeEnemy()` helpers from `setup.js` to construct test fixtures.
+
+**Important:** Objects returned from functions that run inside the VM sandbox have a different `Object` prototype than the outer test context. Use `assert.strictEqual(result.x, value)` (per-property) instead of `assert.deepStrictEqual(result, { x: value })` for objects returned by engine functions.
+
+### Writing New Tests
+
+1. Add a new `describe` block to the appropriate test file, or create `tests/<module>.test.js`
+2. Import helpers at the top:
+   ```js
+   const { describe, it, beforeEach } = require('node:test');
+   const assert = require('node:assert/strict');
+   const { loadEngine, makeGameState, makeEnemy } = require('./helpers/setup');
+   ```
+3. Call `loadEngine()` in `beforeEach` for tests that mutate state; use `before` for read-only tests
+4. Set `ctx.GameState.currentState` to a `makeGameState()` object before exercising logic that reads from current state
+5. Add the new file to the space-separated list in `package.json`'s `test` script
+
 ### Adding a New Enemy Type
 1. Add a spritesheet to `assets/spritesheets/`
 2. Add a hidden `<img>` element in `index.html` with an `id`
@@ -259,7 +306,7 @@ These features are scaffolded or partially stubbed:
 3. **Maintain script load order** — scripts in `index.html` must remain in the correct order: `GameState` → `GUI` → `SceneManager` → `Game` → `index`.
 4. **Global namespace pattern** — new systems should follow the existing pattern (a single global object with methods). Do not introduce ES modules or class syntax without discussion.
 5. **Preload assets in `index.html`** — any new image/sprite must have a hidden `<img>` element added to `index.html` so it is available at runtime.
-6. **No testing framework** — the project has no tests. Do not generate test files unless explicitly asked to set up testing.
+6. **Test new game logic** — a `tests/` suite exists using `node:test`. When adding non-trivial logic to the engine, add corresponding tests. Follow the patterns in the existing test files (see "Writing New Tests" above).
 7. **Comment new logic** — the codebase uses JSDoc-style comments; follow this convention for new functions.
 8. **Hardcoded config is intentional** — constants like canvas size, FPS, and tile dimensions are hardcoded in `SceneManager.js`. Do not extract them to config files unless asked.
 9. **Game state is in-memory only** — there is no database or localStorage persistence. Do not assume persistence exists.
