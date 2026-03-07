@@ -3,19 +3,137 @@
     src: url("./assets/typography/jgs-main/fonts/jgs7.ttf");
 }
 
-.container {
-    width: auto;
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+
+html, body {
+    margin: 0;
+    padding: 0;
     height: 100%;
+    overflow: hidden;       /* prevent elastic bounce / scroll on iOS */
+    background: #000;
 }
+
+/* ── Outer layout: full-screen flex column ───────────────────────────────── */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
+    /* Respect home-indicator / notch safe areas */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+}
+
+/* ── Canvas section ──────────────────────────────────────────────────────── */
 
 .canvas-container {
     display: flex;
     justify-content: center;
-    align-items: center;
+    width: 100%;
+    flex-shrink: 0;
 }
 
 #game-canvas {
-    width: 500px;
-    height: 500px;
+    /* CSS dimensions only — rendering buffer stays at width="500" height="500" */
+    width: min(500px, 100vw);
+    aspect-ratio: 1 / 1;
     border: 5px solid black;
+    display: block;         /* removes baseline gap */
+    touch-action: none;     /* prevent browser swipe/zoom on the canvas */
+}
+
+/* ── Mobile controls wrapper ─────────────────────────────────────────────── */
+
+/*
+ * Hidden by default (desktop with a fine pointer).
+ * Shown via media query on touch-primary devices, or by adding the
+ * `.controls-visible` class (used in e2e tests to force visibility in
+ * a headless desktop browser).
+ */
+.mobile-controls {
+    display: none;
+    flex: 1;
+    width: 100%;
+    max-width: 500px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .mobile-controls {
+        display: flex;
+    }
+}
+
+.mobile-controls.controls-visible {
+    display: flex;
+}
+
+/* ── D-pad: 3×3 named-area grid, centre cell empty ──────────────────────── */
+
+.dpad {
+    display: grid;
+    grid-template-areas:
+        ".    up   ."
+        "left .    right"
+        ".    down .";
+    grid-template-columns: 60px 60px 60px;
+    grid-template-rows:    60px 60px 60px;
+    gap: 4px;
+}
+
+.dpad-up    { grid-area: up;    }
+.dpad-left  { grid-area: left;  }
+.dpad-right { grid-area: right; }
+.dpad-down  { grid-area: down;  }
+
+/* ── Action buttons: 2-column grid ──────────────────────────────────────── */
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 64px 64px;
+    grid-template-rows: 64px 64px 64px;
+    gap: 6px;
+}
+
+/* ── Shared button style ─────────────────────────────────────────────────── */
+
+.dpad-btn,
+.action-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    /* Suppress tap-highlight flash on Android */
+    -webkit-tap-highlight-color: transparent;
+    /* Each button handles its own touch events; no scroll/pan pass-through */
+    touch-action: none;
+    transition: background 80ms ease;
+}
+
+.dpad-btn:active,
+.action-btn:active,
+.dpad-btn.pressed,
+.action-btn.pressed {
+    background: rgba(255, 255, 255, 0.38);
+}
+
+/* Stub buttons (Z / X / F — not yet implemented) appear dimmer */
+.stub-btn {
+    opacity: 0.45;
 }

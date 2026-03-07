@@ -91,7 +91,9 @@ Game.keyUpHandler = function(event){
         // magic attack
         case "c":
         case "C":
-        // pause/unpause
+        // pause/unpause — include capitalised variants (browser emits "Enter")
+        case "Return":
+        case "Enter":
         case "return":
         case "enter":
             GameState.activeKeys.splice(
@@ -107,8 +109,73 @@ Game.keyUpHandler = function(event){
 
 Game.setInputHandlers = function(){
     window.addEventListener("keydown", Game.keyDownHandler);
-
     window.addEventListener("keyup", Game.keyUpHandler);
+    Game.initMobileControls();
+};
+
+/**
+ * Wires each virtual on-screen button to the same activeKeys array used by
+ * the keyboard handler. touchstart/mousedown push the mapped key string;
+ * touchend/touchcancel/mouseup/mouseleave splice it back out — identical
+ * behaviour to keydown/keyup.
+ *
+ * An IIFE is used inside the loop because Game.js is ES5-style (var).
+ * Without it every iteration would close over the same `key` variable
+ * (the last value assigned), so all buttons would map to 'f'.
+ */
+Game.initMobileControls = function() {
+    var buttonKeyMap = {
+        "btn-up":       "ArrowUp",
+        "btn-down":     "ArrowDown",
+        "btn-left":     "ArrowLeft",
+        "btn-right":    "ArrowRight",
+        "btn-magic":    "c",
+        "btn-pause":    "Enter",
+        "btn-light":    "z",
+        "btn-heavy":    "x",
+        "btn-interact": "f"
+    };
+
+    var ids = Object.keys(buttonKeyMap);
+
+    for (var i = 0; i < ids.length; i++) {
+        (function(id, key) {
+            var el = document.getElementById(id);
+            if (!el) { return; } // graceful: button absent (e.g. unit test context)
+
+            /** Push key into activeKeys (deduplicated, mirrors keyDownHandler). */
+            function onPress(event) {
+                event.preventDefault();
+                var alreadyActive = GameState.activeKeys.filter(function(k) {
+                    return k === key;
+                }).length;
+                if (!alreadyActive) {
+                    GameState.activeKeys.push(key);
+                }
+                el.classList.add("pressed");
+            }
+
+            /** Remove key from activeKeys (mirrors keyUpHandler). */
+            function onRelease(event) {
+                event.preventDefault();
+                var idx = GameState.activeKeys.indexOf(key);
+                if (idx !== -1) {
+                    GameState.activeKeys.splice(idx, 1);
+                }
+                el.classList.remove("pressed");
+            }
+
+            // Touch events (mobile)
+            el.addEventListener("touchstart",  onPress,   { passive: false });
+            el.addEventListener("touchend",    onRelease, { passive: false });
+            el.addEventListener("touchcancel", onRelease, { passive: false });
+
+            // Mouse events (desktop / pointer device testing)
+            el.addEventListener("mousedown",  onPress);
+            el.addEventListener("mouseup",    onRelease);
+            el.addEventListener("mouseleave", onRelease);
+        }(ids[i], buttonKeyMap[ids[i]]));
+    }
 };
 
 /**

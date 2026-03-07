@@ -10,11 +10,10 @@
  *
  * Timing notes:
  *   - The game loop runs at 30 FPS (~33 ms/frame).
- *   - Arrow keys and 'c' are removed from activeKeys on keyup, so tests use
- *     keyboard.down() + waitForTimeout(150) + keyboard.up() to guarantee the
- *     game loop has at least one frame to process the key while it is held.
- *   - 'Enter' is NOT removed by the keyup handler (a known game quirk), so
- *     keyboard.press('Enter') + waitForTimeout(100) is sufficient.
+ *   - All keys (including Enter) are removed from activeKeys on keyup, so
+ *     tests use holdKey() — keyboard.down() + waitForTimeout(150) +
+ *     keyboard.up() — to guarantee the game loop has at least one frame to
+ *     process the key while it is held.
  */
 
 const { test, expect } = require('playwright/test');
@@ -160,8 +159,7 @@ test.describe('Player movement', () => {
 
     test('player does not move while paused', async ({ page }) => {
         // Pause the game
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
+        await holdKey(page, 'Enter');
 
         const before = await getState(page);
         await holdKey(page, 'ArrowRight');
@@ -222,37 +220,29 @@ test.describe('Pause / unpause', () => {
     });
 
     test('Enter pauses an active game', async ({ page }) => {
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
+        await holdKey(page, 'Enter');
         const state = await getState(page);
         expect(state.isPaused).toBe(true);
         expect(state.isActive).toBe(false);
     });
 
     test('pressing Enter again unpauses the game', async ({ page }) => {
-        // Pause
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
-        // Unpause
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
+        await holdKey(page, 'Enter'); // pause
+        await holdKey(page, 'Enter'); // unpause
         const state = await getState(page);
         expect(state.isPaused).toBe(false);
         expect(state.isActive).toBe(true);
     });
 
     test('activeMenu is set to "pause" when paused', async ({ page }) => {
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
+        await holdKey(page, 'Enter');
         const state = await getState(page);
         expect(state.activeMenu).toBe('pause');
     });
 
     test('activeMenu is cleared when unpaused', async ({ page }) => {
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
+        await holdKey(page, 'Enter'); // pause
+        await holdKey(page, 'Enter'); // unpause
         const state = await getState(page);
         expect(state.activeMenu).toBeNull();
     });
@@ -296,8 +286,7 @@ test.describe('Magic projectile (C key)', () => {
     });
 
     test('pressing C does not fire while paused', async ({ page }) => {
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
+        await holdKey(page, 'Enter');
 
         await holdKey(page, 'c');
         const state = await getState(page);
@@ -333,10 +322,104 @@ test.describe('Game over', () => {
             GameState.checkPlayerStatus();
         });
         // Try to pause — should be ignored (togglePaused no-ops when isGameOver)
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(100);
+        await holdKey(page, 'Enter');
         const state = await getState(page);
         expect(state.isPaused).toBe(false);
         expect(state.isGameOver).toBe(true);
+    });
+});
+
+// ── Mobile controls (virtual buttons) ────────────────────────────────────────
+
+test.describe('Mobile controls (virtual buttons)', () => {
+    /**
+     * Force the controls visible in the headless desktop browser by adding
+     * the .controls-visible class before each test. On a real touch device
+     * the @media query shows them automatically.
+     *
+     * Tests use dispatchEvent('mousedown') / dispatchEvent('mouseup') to
+     * activate the mouse branch of Game.initMobileControls, which is
+     * identical in logic to the touch branch. This avoids needing
+     * `hasTouch: true` in playwright.config.js.
+     */
+    test.beforeEach(async ({ page }) => {
+        await loadGame(page);
+        await page.evaluate(() => {
+            document.querySelector('.mobile-controls').classList.add('controls-visible');
+        });
+    });
+
+    test('controls are visible when controls-visible class is set', async ({ page }) => {
+        await expect(page.locator('.mobile-controls')).toBeVisible();
+    });
+
+    test('canvas rendering buffer stays at 500×500', async ({ page }) => {
+        await expect(page.locator('#game-canvas')).toHaveAttribute('width', '500');
+        await expect(page.locator('#game-canvas')).toHaveAttribute('height', '500');
+    });
+
+    test('d-pad up button moves player upward', async ({ page }) => {
+        const before = await getState(page);
+        await page.locator('#btn-up').dispatchEvent('mousedown');
+        await page.waitForTimeout(150);
+        await page.locator('#btn-up').dispatchEvent('mouseup');
+        const after = await getState(page);
+        expect(after.y).toBeGreaterThan(before.y);
+    });
+
+    test('d-pad right button moves player rightward', async ({ page }) => {
+        const before = await getState(page);
+        await page.locator('#btn-right').dispatchEvent('mousedown');
+        await page.waitForTimeout(150);
+        await page.locator('#btn-right').dispatchEvent('mouseup');
+        const after = await getState(page);
+        expect(after.x).toBeGreaterThan(before.x);
+    });
+
+    test('d-pad left button moves player leftward', async ({ page }) => {
+        const before = await getState(page);
+        await page.locator('#btn-left').dispatchEvent('mousedown');
+        await page.waitForTimeout(150);
+        await page.locator('#btn-left').dispatchEvent('mouseup');
+        const after = await getState(page);
+        expect(after.x).toBeLessThan(before.x);
+    });
+
+    test('d-pad down button moves player downward', async ({ page }) => {
+        // Move up first so there is room to move down
+        await page.locator('#btn-up').dispatchEvent('mousedown');
+        await page.waitForTimeout(200);
+        await page.locator('#btn-up').dispatchEvent('mouseup');
+        const before = await getState(page);
+        await page.locator('#btn-down').dispatchEvent('mousedown');
+        await page.waitForTimeout(150);
+        await page.locator('#btn-down').dispatchEvent('mouseup');
+        const after = await getState(page);
+        expect(after.y).toBeLessThan(before.y);
+    });
+
+    test('magic button creates a projectile', async ({ page }) => {
+        await page.locator('#btn-magic').dispatchEvent('mousedown');
+        await page.waitForTimeout(150);
+        await page.locator('#btn-magic').dispatchEvent('mouseup');
+        const state = await getState(page);
+        expect(state.attackCount).toBeGreaterThan(0);
+    });
+
+    test('pause button pauses the game', async ({ page }) => {
+        await page.locator('#btn-pause').dispatchEvent('mousedown');
+        await page.waitForTimeout(150);
+        await page.locator('#btn-pause').dispatchEvent('mouseup');
+        const state = await getState(page);
+        expect(state.isPaused).toBe(true);
+    });
+
+    test('ArrowRight key is removed from activeKeys after button mouseup', async ({ page }) => {
+        await page.locator('#btn-right').dispatchEvent('mousedown');
+        await page.waitForTimeout(50);
+        await page.locator('#btn-right').dispatchEvent('mouseup');
+        await page.waitForTimeout(50);
+        const keys = await page.evaluate(() => GameState.activeKeys);
+        expect(keys).not.toContain('ArrowRight');
     });
 });
