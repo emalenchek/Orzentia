@@ -17,18 +17,21 @@ Orzentia/
 ├── index.html              # Entry point — loads all scripts and hidden sprite images
 ├── index.js                # Bootstrap — calls Game.start()
 ├── styles.css              # Global styles (canvas centering, custom font)
-├── package.json            # Minimal — only defines the "test" npm script
+├── package.json            # npm scripts for unit and e2e tests (no runtime deps)
+├── playwright.config.js    # Playwright e2e configuration
 ├── engine/                 # Core game systems (one file per system)
 │   ├── Game.js             # Input handling, game loop entry, collision map data
 │   ├── GameState.js        # All runtime state (player, enemies, attacks, menus)
 │   ├── SceneManager.js     # Rendering, animation, camera, viewport
 │   └── GUI.js              # Static menu/UI definitions
-├── tests/                  # Unit test suite (Node.js built-in test runner)
+├── tests/
 │   ├── helpers/
-│   │   └── setup.js        # VM sandbox + browser mock loader
-│   ├── game.test.js        # Tests for Game module
-│   ├── gamestate.test.js   # Tests for GameState module
-│   └── scenemanager.test.js # Tests for SceneManager module
+│   │   └── setup.js        # VM sandbox + browser mock loader (unit tests)
+│   ├── game.test.js        # Unit tests — Game module
+│   ├── gamestate.test.js   # Unit tests — GameState module
+│   ├── scenemanager.test.js # Unit tests — SceneManager module
+│   └── e2e/
+│       └── gameplay.test.js # End-to-end tests (Playwright, real browser)
 └── assets/
     ├── OrzentiaOverworld.png         # Tileset image
     ├── OrzentiaOverworldData.tmj     # Tiled map file (48×48 grid)
@@ -50,8 +53,9 @@ Orzentia/
 | Maps          | Tiled Map Editor (.tmj JSON format) |
 | Fonts         | JGS pixel font (custom bitmap)      |
 | Build tools   | None                                |
-| Package mgr   | npm (test script only, no deps)     |
-| Test runner   | Node.js built-in (`node:test`)      |
+| Package mgr   | npm (test scripts only, no runtime deps) |
+| Unit tests    | Node.js built-in (`node:test`)      |
+| E2E tests     | Playwright 1.56 (global install)    |
 | CI/CD         | None                                |
 
 ---
@@ -216,22 +220,40 @@ Input is tracked via an `activeKeys` array on the game state (acts as an input b
    ```
 
 ### Running the Tests
-Requires Node.js 18 or later (uses the built-in `node:test` module — no `npm install` needed).
 
+**All tests (unit + e2e):**
 ```bash
 npm test
 ```
 
-This runs all three test files directly:
+**Unit tests only** (fast, no browser needed):
+```bash
+npm run test:unit
+```
+
+**E2E tests only** (requires Chromium, spins up `http-server`):
+```bash
+npm run test:e2e
+```
+
+#### Unit test details
+Requires Node.js 18+. Uses the built-in `node:test` module — no `npm install` needed.
 ```
 tests/game.test.js          — Game.getDistanceBetweenPoints (7 tests)
 tests/gamestate.test.js     — collision, damage, spawn/despawn, pause, AI (38 tests)
 tests/scenemanager.test.js  — SceneManager.getTrueLocation (9 tests)
 ```
-
 Output is TAP format. A passing run ends with `# fail 0`.
 
-### How the Test Suite Works
+#### E2E test details
+Uses Playwright 1.56 (globally installed at `/opt/node22/lib/node_modules/playwright`) with the Chromium browser at `~/.cache/ms-playwright/`. Tests run headless. `http-server` serves the game on port 8181 automatically.
+```
+tests/e2e/gameplay.test.js  — canvas, initial state, movement, orientation,
+                               pause/unpause, magic cast, game over (31 tests)
+```
+Config lives in `playwright.config.js`. The npm script sets `NODE_PATH=/opt/node22/lib/node_modules` so Playwright can be resolved without a local install.
+
+### How the Unit Test Suite Works
 
 The engine files were written for the browser (global namespace, DOM APIs). To test them in Node.js, `tests/helpers/setup.js` uses the `vm` module to:
 1. Mock browser globals (`document`, `window`, `Image`, `requestAnimationFrame`) in an isolated context
@@ -242,7 +264,18 @@ Each test file calls `loadEngine()` in `beforeEach` to get a fresh, isolated eng
 
 **Important:** Objects returned from functions that run inside the VM sandbox have a different `Object` prototype than the outer test context. Use `assert.strictEqual(result.x, value)` (per-property) instead of `assert.deepStrictEqual(result, { x: value })` for objects returned by engine functions.
 
-### Writing New Tests
+### How the E2E Test Suite Works
+
+E2E tests load the real game in a headless Chromium browser and interact with it via Playwright. Game state is inspected with `page.evaluate(() => GameState.currentState.*)` — the globals are accessible because the engine files run in the browser's global scope.
+
+**Key timing rules for e2e tests:**
+- The game loop runs at 30 FPS (~33 ms/frame). After any input, wait at least 100 ms for the loop to process it.
+- Arrow keys and `c` are removed from `activeKeys` on `keyup`, so they must be held with `keyboard.down()` + `waitForTimeout(150)` + `keyboard.up()` — a plain `keyboard.press()` releases the key before the loop can process it.
+- `Enter` is NOT removed on `keyup` (a quirk of the current keyup handler), so `keyboard.press('Enter')` + `waitForTimeout(100)` is sufficient.
+
+The `loadGame(page)` and `holdKey(page, key, ms)` helpers in `gameplay.test.js` encapsulate this timing correctly — reuse them in new e2e tests.
+
+### Writing New Unit Tests
 
 1. Add a new `describe` block to the appropriate test file, or create `tests/<module>.test.js`
 2. Import helpers at the top:
@@ -253,7 +286,16 @@ Each test file calls `loadEngine()` in `beforeEach` to get a fresh, isolated eng
    ```
 3. Call `loadEngine()` in `beforeEach` for tests that mutate state; use `before` for read-only tests
 4. Set `ctx.GameState.currentState` to a `makeGameState()` object before exercising logic that reads from current state
-5. Add the new file to the space-separated list in `package.json`'s `test` script
+5. Add the new file to the space-separated list in `package.json`'s `test:unit` script
+
+### Writing New E2E Tests
+
+1. Add a new `test.describe` block to `tests/e2e/gameplay.test.js` or create a new file in `tests/e2e/`
+2. Use the `loadGame(page)` helper at the start of each test or in `test.beforeEach`
+3. Use `holdKey(page, key, ms)` for keys that get removed on keyup (Arrow keys, `c`)
+4. Use `keyboard.press('Enter')` + `waitForTimeout(100)` for Enter
+5. Use `page.evaluate()` to read `GameState.currentState.*` for state assertions
+6. New e2e test files are discovered automatically (no config changes needed)
 
 ### Adding a New Enemy Type
 1. Add a spritesheet to `assets/spritesheets/`
