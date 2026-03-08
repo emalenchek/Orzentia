@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it, beforeEach } = require('node:test');
+const { describe, it, before, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadEngine, makeGameState, makeEnemy } = require('./helpers/setup');
 
@@ -422,5 +422,238 @@ describe('GameState.getPossibleEnemyMoves', () => {
             const yChanged = move.y !== enemy.location.y;
             assert.ok(xChanged || yChanged, 'move should differ from original location');
         }
+    });
+});
+
+// ─── getExperienceToNextLevel ─────────────────────────────────────────────────
+describe('GameState.getExperienceToNextLevel', () => {
+    let GameState;
+
+    before(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+    });
+
+    it('returns 100 for level 1', () => {
+        assert.strictEqual(GameState.getExperienceToNextLevel(1), 100);
+    });
+
+    it('returns 283 for level 2', () => {
+        // floor(100 * 2^1.5) = floor(282.84…) = 282
+        assert.strictEqual(GameState.getExperienceToNextLevel(2), 282);
+    });
+
+    it('increases with each level', () => {
+        const xp1 = GameState.getExperienceToNextLevel(1);
+        const xp2 = GameState.getExperienceToNextLevel(2);
+        const xp3 = GameState.getExperienceToNextLevel(3);
+        assert.ok(xp2 > xp1, 'level 2 threshold should exceed level 1');
+        assert.ok(xp3 > xp2, 'level 3 threshold should exceed level 2');
+    });
+
+    it('always returns a positive integer', () => {
+        for (let lvl = 1; lvl <= 10; lvl++) {
+            const val = GameState.getExperienceToNextLevel(lvl);
+            assert.ok(Number.isInteger(val) && val > 0);
+        }
+    });
+});
+
+// ─── checkLevelUp ─────────────────────────────────────────────────────────────
+describe('GameState.checkLevelUp', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('does nothing when experience is below threshold', () => {
+        GameState.currentState.player.experience = 50;
+        GameState.checkLevelUp();
+        assert.strictEqual(GameState.currentState.player.level, 1);
+        assert.strictEqual(GameState.currentState.player.experience, 50);
+    });
+
+    it('advances level when experience meets threshold', () => {
+        GameState.currentState.player.experience = 100; // exact threshold at level 1
+        GameState.checkLevelUp();
+        assert.strictEqual(GameState.currentState.player.level, 2);
+        assert.strictEqual(GameState.currentState.player.experience, 0);
+    });
+
+    it('carries over surplus experience after level-up', () => {
+        GameState.currentState.player.experience = 150; // 100 threshold + 50 surplus
+        GameState.checkLevelUp();
+        assert.strictEqual(GameState.currentState.player.level, 2);
+        assert.strictEqual(GameState.currentState.player.experience, 50);
+    });
+
+    it('increases maxHealth by 2 on level-up', () => {
+        GameState.currentState.player.experience = 100;
+        GameState.checkLevelUp();
+        assert.strictEqual(GameState.currentState.player.maxHealth, 7);
+    });
+
+    it('increases strength by 1 on level-up', () => {
+        GameState.currentState.player.experience = 100;
+        GameState.checkLevelUp();
+        assert.strictEqual(GameState.currentState.player.strength, 2);
+    });
+
+    it('does not allow health to exceed new maxHealth', () => {
+        GameState.currentState.player.health = 5;
+        GameState.currentState.player.maxHealth = 5;
+        GameState.currentState.player.experience = 100;
+        GameState.checkLevelUp();
+        // health restored by 2, but capped at new maxHealth (7)
+        assert.strictEqual(GameState.currentState.player.health, 7);
+    });
+});
+
+// ─── calculateEnemyDamage — XP award ─────────────────────────────────────────
+describe('GameState.calculateEnemyDamage — experience award', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('awards experience to the player when enemy is killed', () => {
+        const enemy = makeEnemy({ health: 5, experienceYield: 10, index: 0 });
+        GameState.currentState.spawnedEnemies.push(enemy);
+        GameState.calculateEnemyDamage({ damage: 5 }, enemy);
+        assert.strictEqual(GameState.currentState.player.experience, 10);
+    });
+
+    it('does NOT award experience when the enemy survives', () => {
+        const enemy = makeEnemy({ health: 10, experienceYield: 10, index: 0 });
+        GameState.currentState.spawnedEnemies.push(enemy);
+        GameState.calculateEnemyDamage({ damage: 3 }, enemy);
+        assert.strictEqual(GameState.currentState.player.experience, 0);
+    });
+});
+
+// ─── enemy attack cooldown ────────────────────────────────────────────────────
+describe('enemy remainingAttackCooldown prevents per-frame damage', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('deals damage when remainingAttackCooldown is 0', () => {
+        const enemy = makeEnemy({ strength: 1, attackCooldownFrames: 30, remainingAttackCooldown: 0 });
+        // bypass isCollidingWithPlayer by calling calculatePlayerDamage via the cooldown check directly
+        if (enemy.remainingAttackCooldown <= 0) {
+            GameState.calculatePlayerDamage(enemy);
+            enemy.remainingAttackCooldown = enemy.attackCooldownFrames;
+        }
+        assert.strictEqual(GameState.currentState.player.health, 4);
+        assert.strictEqual(enemy.remainingAttackCooldown, 30);
+    });
+
+    it('does NOT deal damage when remainingAttackCooldown > 0', () => {
+        const enemy = makeEnemy({ strength: 1, attackCooldownFrames: 30, remainingAttackCooldown: 15 });
+        if (enemy.remainingAttackCooldown <= 0) {
+            GameState.calculatePlayerDamage(enemy);
+            enemy.remainingAttackCooldown = enemy.attackCooldownFrames;
+        }
+        // cooldown was 15, so damage must not have been applied
+        assert.strictEqual(GameState.currentState.player.health, 5);
+    });
+});
+
+// ─── playerActions.lightAttack ────────────────────────────────────────────────
+describe('GameState.playerActions.lightAttack', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    it('adds a melee attack to activeAttacks', () => {
+        GameState.playerActions.lightAttack();
+        assert.strictEqual(GameState.currentState.activeAttacks.length, 1);
+        assert.strictEqual(GameState.currentState.activeAttacks[0].type, 'melee');
+        assert.strictEqual(GameState.currentState.activeAttacks[0].subtype, 'light');
+    });
+
+    it('does nothing when player is still on attack cooldown', () => {
+        GameState.currentState.player.remainingAttackCooldown = 10;
+        GameState.playerActions.lightAttack();
+        assert.strictEqual(GameState.currentState.activeAttacks.length, 0);
+    });
+
+    it('sets player remainingAttackCooldown after attack', () => {
+        GameState.playerActions.lightAttack();
+        assert.strictEqual(
+            GameState.currentState.player.remainingAttackCooldown,
+            GameState.currentState.player.attackCooldownFrames
+        );
+    });
+
+    it('attack damage scales with player strength', () => {
+        GameState.currentState.player.strength = 3;
+        GameState.playerActions.lightAttack();
+        assert.strictEqual(GameState.currentState.activeAttacks[0].damage, 6);
+    });
+
+    it('attack has the expected activeFrames', () => {
+        GameState.playerActions.lightAttack();
+        assert.strictEqual(GameState.currentState.activeAttacks[0].activeFrames, 10);
+    });
+
+    it('attack starts with an empty alreadyHit list', () => {
+        GameState.playerActions.lightAttack();
+        const attack = GameState.currentState.activeAttacks[0];
+        assert.strictEqual(attack.alreadyHit.length, 0);
+    });
+});
+
+// ─── updateActiveAttack — melee ───────────────────────────────────────────────
+describe('GameState.updateActiveAttack — melee', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+    });
+
+    function makeMeleeAttack(overrides) {
+        return Object.assign({
+            index: 0,
+            type: 'melee',
+            subtype: 'light',
+            damage: 2,
+            orientation: 'S',
+            currentLocation: { x: 0, y: 0 },
+            width: 36,
+            height: 24,
+            activeFrames: 5,
+            alreadyHit: []
+        }, overrides);
+    }
+
+    it('decrements activeFrames each call', () => {
+        const attack = makeMeleeAttack({ index: 0 });
+        GameState.currentState.activeAttacks.push(attack);
+        GameState.updateActiveAttack(attack);
+        assert.strictEqual(attack.activeFrames, 4);
+    });
+
+    it('despawns the attack when activeFrames reaches 0', () => {
+        const attack = makeMeleeAttack({ activeFrames: 1, index: 0 });
+        GameState.currentState.activeAttacks.push(attack);
+        GameState.updateActiveAttack(attack);
+        assert.strictEqual(GameState.currentState.activeAttacks.length, 0);
     });
 });

@@ -671,9 +671,16 @@ SceneManager.renderAttackAnimations = function(){
                 // need to update location of projectile
                 GameState.updateActiveAttack(attack);
             }
-            else {
-                // do nothing
-                // may want to just render a red block or something
+            else if (attack.type === "melee"){
+                // render a semi-transparent yellow arc to visualise the swing
+                this.canvasCtx.save();
+                this.canvasCtx.globalAlpha = 0.45;
+                this.canvasCtx.fillStyle = "rgb(255, 220, 60)";
+                this.canvasCtx.fillRect(x, y, attack.width, attack.height);
+                this.canvasCtx.globalAlpha = 1.0;
+                this.canvasCtx.restore();
+
+                GameState.updateActiveAttack(attack);
             }
         }
     }

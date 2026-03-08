@@ -29,6 +29,9 @@ GameState.exampleEnemy = {
     "width": 40,
     "height": 40,
     "strength": 1,
+    // frames between consecutive attacks (30 = once per second at 30 FPS)
+    "attackCooldownFrames": 30,
+    "remainingAttackCooldown": 0,
 };
 
 GameState.destroyGameState = function(){
@@ -59,6 +62,12 @@ GameState.newStateTemplate = {
             "legs": {},
             "feet": {}
         },
+        // combat stats
+        "maxHealth": 5,
+        "strength": 1,
+        // frames until the player can attack again (20 ≈ 0.67 sec at 30 FPS)
+        "attackCooldownFrames": 20,
+        "remainingAttackCooldown": 0,
         // speed at which the PC can move
         "speed": 5,
         "currency": 0,
@@ -141,6 +150,10 @@ GameState.updatePlayerState = function(){
 
     if (player.remainingInvulnerabilityFrames > 0){
         player.remainingInvulnerabilityFrames--;
+    }
+
+    if (player.remainingAttackCooldown > 0){
+        player.remainingAttackCooldown--;
     }
 
     GameState.checkPlayerStatus();
@@ -242,7 +255,9 @@ GameState.updatePlayerLocation = function(){
                 break;
             case "z":
             case "Z":
-                // light attack (horizontal arc) for now
+                // remove key so attack fires once per key-press, not every frame
+                GameState.activeKeys.splice(GameState.activeKeys.indexOf(key), 1);
+                GameState.playerActions.lightAttack();
                 break;
             case "X":
             case "x":
@@ -344,6 +359,64 @@ GameState.playerActions.castMagic = function(){
 };
 
 /**
+ * Performs a fast melee swing in front of the player (light attack).
+ * Creates a short-lived hitbox that damages the first enemy it overlaps.
+ * Respects the player's attackCooldownFrames.
+ */
+GameState.playerActions.lightAttack = function(){
+    var player = GameState.currentState.player;
+    if (player.remainingAttackCooldown > 0){ return; }
+
+    var orientation = player.orientation;
+    var loc = player.location;
+    // hitbox is wider than tall so it reads as a horizontal arc
+    var hitW = 36;
+    var hitH = 24;
+    var offsetX = 0;
+    var offsetY = 0;
+
+    // position the hitbox directly in front of the player
+    switch (orientation){
+        case "N":
+            offsetX = -(hitW / 2);
+            offsetY = (player.height / 2) + 4;
+            break;
+        case "S":
+            offsetX = -(hitW / 2);
+            offsetY = -((player.height / 2) + hitH + 4);
+            break;
+        case "E":
+            offsetX = (player.width / 2) + 4;
+            offsetY = -(hitH / 2);
+            break;
+        case "W":
+            offsetX = -((player.width / 2) + hitW + 4);
+            offsetY = -(hitH / 2);
+            break;
+        default:
+            break;
+    }
+
+    var activeAttacks = GameState.currentState.activeAttacks;
+    activeAttacks.push({
+        "index": activeAttacks.length,
+        "type": "melee",
+        "subtype": "light",
+        "damage": 2 * player.strength,
+        "orientation": orientation,
+        "currentLocation": { "x": loc.x + offsetX, "y": loc.y + offsetY },
+        "width": hitW,
+        "height": hitH,
+        // active for ~10 frames (~333 ms at 30 FPS)
+        "activeFrames": 10,
+        // track which enemies were already struck this swing (prevents multi-hit)
+        "alreadyHit": []
+    });
+
+    player.remainingAttackCooldown = player.attackCooldownFrames;
+};
+
+/**
  * updates the rotation value for the player's orientation
  * Based on cardinal direction
  */
@@ -440,6 +513,14 @@ GameState.playerActions.fireMagicProjectile = function(spell){
  * @param {Object} attack - an active attack
  */
 GameState.updateActiveAttack = function(attack){
+    if (attack.type === "melee"){
+        attack.activeFrames--;
+        if (attack.activeFrames <= 0){
+            GameState.despawnActiveAttack(attack);
+        }
+        return;
+    }
+
     // eventually want to despawn the projectile once it
     // leaves the "camera"'s view
     if (attack.type === "projectile"){
@@ -726,8 +807,11 @@ GameState.isCollidingWithPlayer = function(enemy){
     if (hit){
         console.log ("player hit by " + enemy.name + "!!");
 
-        // calculate damage to player
-        GameState.calculatePlayerDamage(enemy);
+        // only deal damage once per cooldown window
+        if (enemy.remainingAttackCooldown <= 0){
+            GameState.calculatePlayerDamage(enemy);
+            enemy.remainingAttackCooldown = enemy.attackCooldownFrames;
+        }
     }
 };
 
@@ -738,10 +822,15 @@ GameState.isCollidingWithPlayer = function(enemy){
 GameState.updateActiveEnemy = function(enemy){
     // will want to have some pathfinding algorithm for moving enemies
     // ex. movementType === "agressive", need algorithm to find shortest path to the player
-    
+
     // NOTE: may want to move this outside of the updateActiveEnemy function
     // as we only want to do this every few frames
     GameState.updateActiveEnemySprite(enemy);
+
+    // tick down the enemy's attack cooldown each frame
+    if (enemy.remainingAttackCooldown > 0){
+        enemy.remainingAttackCooldown--;
+    }
 
     var type = enemy.movementType;
     switch (type){
@@ -803,9 +892,25 @@ GameState.checkAttackEnemyCollision = function(){
 
             
             if (hit){
-                GameState.calculateEnemyDamage(attack, enemy);
-                GameState.despawnActiveAttack(attack);
-                console.log("hit!");
+                if (attack.type === "melee"){
+                    // each enemy can only be struck once per swing
+                    var alreadyHit = false;
+                    for (var k = 0; k < attack.alreadyHit.length; k++){
+                        if (attack.alreadyHit[k] === enemy.index){
+                            alreadyHit = true;
+                            break;
+                        }
+                    }
+                    if (!alreadyHit){
+                        attack.alreadyHit.push(enemy.index);
+                        GameState.calculateEnemyDamage(attack, enemy);
+                        console.log("melee hit!");
+                    }
+                } else {
+                    GameState.calculateEnemyDamage(attack, enemy);
+                    GameState.despawnActiveAttack(attack);
+                    console.log("hit!");
+                }
             }
         }
     }
@@ -817,12 +922,41 @@ GameState.checkAttackEnemyCollision = function(){
  * @param {*} enemy - The recipient of the attack
  */
 GameState.calculateEnemyDamage = function(attack, enemy){
-    // simple calculation for now
     enemy.health -= attack.damage;
     if (enemy.health <= 0){
+        // award experience before removing the enemy
+        GameState.currentState.player.experience += enemy.experienceYield;
+        GameState.checkLevelUp();
         GameState.despawnActiveEnemy(enemy);
     }
-}
+};
+
+/**
+ * Returns the total experience required to advance from the given level.
+ * Formula: 100 * level^1.5 (produces a gentle exponential curve).
+ * @param {Number} level - current player level
+ */
+GameState.getExperienceToNextLevel = function(level){
+    return Math.floor(100 * Math.pow(level, 1.5));
+};
+
+/**
+ * Checks if the player has enough experience to level up, and applies
+ * stat gains for each level earned. Handles multi-level gains in one call.
+ */
+GameState.checkLevelUp = function(){
+    var player = GameState.currentState.player;
+    var threshold = GameState.getExperienceToNextLevel(player.level);
+    while (player.experience >= threshold){
+        player.experience -= threshold;
+        player.level++;
+        player.maxHealth += 2;
+        // restore some health on level up, but do not exceed new max
+        player.health = Math.min(player.health + 2, player.maxHealth);
+        player.strength++;
+        threshold = GameState.getExperienceToNextLevel(player.level);
+    }
+};
 
 /**
  * Set active menu based on menu type passed in, and register input handlers

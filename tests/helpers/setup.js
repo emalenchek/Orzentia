@@ -106,9 +106,15 @@ function makeGameState(overrides) {
         spawnedEnemies: [],
         player: {
             health: 5,
+            maxHealth: 5,
             width: 22,
             height: 32,
             speed: 5,
+            strength: 1,
+            level: 1,
+            experience: 0,
+            attackCooldownFrames: 20,
+            remainingAttackCooldown: 0,
             location: { x: 0, y: 0 },
             orientation: 'S',
             rotation: 0,
@@ -156,7 +162,9 @@ function makeEnemy(overrides) {
         spriteHeight: 24,
         width: 40,
         height: 40,
-        strength: 1
+        strength: 1,
+        attackCooldownFrames: 30,
+        remainingAttackCooldown: 0
     };
 
     if (overrides) {
