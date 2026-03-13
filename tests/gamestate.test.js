@@ -870,3 +870,72 @@ describe('updatePlayerLocation — arrow keys blocked during dialogue', () => {
         assert.strictEqual(GameState.currentState.player.location.x, 0);
     });
 });
+
+// ─── registerPauseMenuInputHandlers ───────────────────────────────────────────
+// Arrow keys must be consumed (spliced from activeKeys) after a single
+// cursor move so the cursor doesn't race through all options in one keydown.
+describe('GameState.registerPauseMenuInputHandlers', () => {
+    let GameState, GUI;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GUI = ctx.GUI;
+        GameState.currentState = makeGameState({ isActive: false, isPaused: true, activeMenu: 'pause' });
+        GUI.pauseMenuDetails.cursorIndex = 0;
+    });
+
+    it('ArrowDown increments cursorIndex', () => {
+        GameState.activeKeys = ['ArrowDown'];
+        GameState.registerPauseMenuInputHandlers();
+        assert.strictEqual(GUI.pauseMenuDetails.cursorIndex, 1);
+    });
+
+    it('ArrowDown consumes the key so it fires only once', () => {
+        GameState.activeKeys = ['ArrowDown'];
+        GameState.registerPauseMenuInputHandlers();
+        assert.strictEqual(GameState.activeKeys.indexOf('ArrowDown'), -1);
+    });
+
+    it('ArrowUp decrements cursorIndex', () => {
+        GUI.pauseMenuDetails.cursorIndex = 2;
+        GameState.activeKeys = ['ArrowUp'];
+        GameState.registerPauseMenuInputHandlers();
+        assert.strictEqual(GUI.pauseMenuDetails.cursorIndex, 1);
+    });
+
+    it('ArrowUp consumes the key so it fires only once', () => {
+        GUI.pauseMenuDetails.cursorIndex = 2;
+        GameState.activeKeys = ['ArrowUp'];
+        GameState.registerPauseMenuInputHandlers();
+        assert.strictEqual(GameState.activeKeys.indexOf('ArrowUp'), -1);
+    });
+
+    it('ArrowUp does not go below 0', () => {
+        GUI.pauseMenuDetails.cursorIndex = 0;
+        GameState.activeKeys = ['ArrowUp'];
+        GameState.registerPauseMenuInputHandlers();
+        assert.strictEqual(GUI.pauseMenuDetails.cursorIndex, 0);
+    });
+
+    it('ArrowDown does not exceed last option index', () => {
+        GUI.pauseMenuDetails.cursorIndex = GUI.pauseMenuDetails.options.length - 1;
+        GameState.activeKeys = ['ArrowDown'];
+        GameState.registerPauseMenuInputHandlers();
+        assert.strictEqual(GUI.pauseMenuDetails.cursorIndex, GUI.pauseMenuDetails.options.length - 1);
+    });
+
+    it('Enter clears activeMenu and sets isActive to true', () => {
+        GameState.activeKeys = ['Enter'];
+        GameState.registerPauseMenuInputHandlers();
+        assert.strictEqual(GameState.currentState.isActive, true);
+        assert.strictEqual(GameState.currentState.activeMenu, null);
+    });
+
+    it('X clears activeMenu and sets isActive to true', () => {
+        GameState.activeKeys = ['X'];
+        GameState.registerPauseMenuInputHandlers();
+        assert.strictEqual(GameState.currentState.isActive, true);
+        assert.strictEqual(GameState.currentState.activeMenu, null);
+    });
+});

@@ -300,13 +300,6 @@ GameState.updatePlayerLocation = function(){
                             GameState.currentState.player.speed;
                         }
                     }
-                    else {
-                        // need to decrement pause menu cursor up one if possible
-                        if (GUI.pauseMenuDetails.cursorIndex > 0){
-                            GUI.pauseMenuDetails.cursorIndex--;
-                            GameState.activeKeys = [];
-                        }
-                    }
                 }
                 break;
             case "ArrowDown":
@@ -322,13 +315,6 @@ GameState.updatePlayerLocation = function(){
                             // move character down
                             GameState.currentState.player.location.y -=
                                 GameState.currentState.player.speed;
-                        }
-                    }
-                    else {
-                        // need to decrement pause menu cursor up one if possible
-                        if (GUI.pauseMenuDetails.cursorIndex < GUI.pauseMenuDetails.options.length - 1){
-                            GUI.pauseMenuDetails.cursorIndex++;
-                            GameState.activeKeys = [];
                         }
                     }
                 }
@@ -1150,17 +1136,23 @@ GameState.registerPauseMenuInputHandlers = function(){
     GameState.activeKeys.map(function(key){
         switch (key){
             case "ArrowUp":
+                // consume the key so the cursor moves once per press, not every frame
+                GameState.activeKeys.splice(GameState.activeKeys.indexOf(key), 1);
                 if (GUI.pauseMenuDetails.cursorIndex > 0){
                     GUI.pauseMenuDetails.cursorIndex--;
                 }
                 break;
             case "ArrowDown":
+                // consume the key so the cursor moves once per press, not every frame
+                GameState.activeKeys.splice(GameState.activeKeys.indexOf(key), 1);
                 if (GUI.pauseMenuDetails.cursorIndex < GUI.pauseMenuDetails.options.length - 1){
                     GUI.pauseMenuDetails.cursorIndex++;
                 }
                 break;
             case "Z":
             case "z":
+                // consume so confirm fires once per press
+                GameState.activeKeys.splice(GameState.activeKeys.indexOf(key), 1);
                 switch (GUI.pauseMenuDetails.options[GUI.pauseMenuDetails.cursorIndex]){
                     case "Inventory":
                         break;
