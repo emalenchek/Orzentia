@@ -30,15 +30,14 @@ SceneManager.canvasStartYOffset = -1120;
 SceneManager.canvasEl = document.getElementById("game-canvas");
 SceneManager.canvasCtx = SceneManager.canvasEl.getContext("2d");
 
-SceneManager.playerSpritesheet = document.getElementById("player-sprites");
-
 var FPS = 30;
 var FRAME_MIN_TIME = (1000/60) * (60 / FPS) - (1000/60) * 0.5;
-SceneManager.PLAYER_WIDTH = 11 * 2;
-SceneManager.PLAYER_HEIGHT = 16 * 2;
-SceneManager.PLAYER_SPRITE_WIDTH = 11 * 2;
-SceneManager.PLAYER_SPRITE_HEIGHT = 16 * 2;
-var PLAYER_COLOR = "rgb(200, 0, 0)";
+// Character dimensions: 16×24 native pixels at 2.5× scale = 40×60 rendered pixels,
+// matching the tileset's 40 px tile width (16 px native × 2.5 scale).
+SceneManager.PLAYER_WIDTH         = 40;
+SceneManager.PLAYER_HEIGHT        = 60;
+SceneManager.PLAYER_SPRITE_WIDTH  = 16;
+SceneManager.PLAYER_SPRITE_HEIGHT = 24;
 
 // methods //
 
@@ -449,41 +448,71 @@ SceneManager.displayMainMenu = function(){
 };
 
 /**
- * A method that loads the player character onto the scene
+ * Resolves the player's current facing direction and walk-frame index
+ * from the active input and walk-cycle state.
+ * @param {Array}  cycleLoop      - Walk cycle frame index array e.g. [2,0,3,0]
+ * @param {number} cycleLoopIndex - Current position in the cycle loop
+ * @returns {{ direction: string, walkFrame: number }}
  */
-SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex, frameCount){
-    // for now the player is just a square, 
-    // and we want to center the character
+SceneManager.determinePlayerAnimState = function(cycleLoop, cycleLoopIndex){
+    var direction = GameState.currentState.player.orientation || "S";
+    var walkFrame = 0;
 
-    // player width
-    var width = SceneManager.PLAYER_WIDTH;
-    var height = SceneManager.PLAYER_HEIGHT;
+    if (!GameState.activeKeys.length){
+        GameState.updatePlayerOrientationValue();
+        return { direction: direction, walkFrame: 0 };
+    }
 
-    // x coordinate of player (need to subtract half the width as an offset to truly center)
-    var x = (this.canvasEl.width / 2) - (SceneManager.PLAYER_WIDTH / 2);
-    // y coordinate of player (need to subtract half the height as an offset to truly center)
+    var activeMovement = GameState.activeKeys[GameState.activeKeys.length - 1];
+    switch (activeMovement){
+        case "ArrowUp":
+            GameState.currentState.player.orientation = "N";
+            direction = "N";
+            break;
+        case "ArrowDown":
+            GameState.currentState.player.orientation = "S";
+            direction = "S";
+            break;
+        case "ArrowLeft":
+            GameState.currentState.player.orientation = "W";
+            direction = "W";
+            break;
+        case "ArrowRight":
+            GameState.currentState.player.orientation = "E";
+            direction = "E";
+            break;
+        default:
+            break;
+    }
+    GameState.updatePlayerOrientationValue();
+    walkFrame = cycleLoop[cycleLoopIndex] || 0;
+    return { direction: direction, walkFrame: walkFrame };
+};
+
+/**
+ * Loads the player character onto the scene using the programmatic
+ * pixel-art renderer (CharacterSprites.renderCharacter).
+ * @param {Array}  cycleLoop      - Walk cycle frame index array
+ * @param {number} cycleLoopIndex - Current position in the cycle
+ */
+SceneManager.loadPlayer = function(cycleLoop, cycleLoopIndex){
+    // x coordinate of player — subtract half the width to truly centre
+    var x = (this.canvasEl.width  / 2) - (SceneManager.PLAYER_WIDTH  / 2);
+    // y coordinate of player — subtract half the height to truly centre
     var y = (this.canvasEl.height / 2) - (SceneManager.PLAYER_HEIGHT / 2);
 
     var xOffset = GameState.currentState.player.location.x;
     var yOffset = GameState.currentState.player.location.y;
 
-    var playerImage = document.getElementById("player-sprites");
+    var animState = SceneManager.determinePlayerAnimState(cycleLoop, cycleLoopIndex);
 
-    // Get the correct sprite data
-
-    var spritesheetData = SceneManager.determineActivePlayerSprite(cycleLoop, cycleLoopIndex);
-
-    // Draw image to canvas
-    this.canvasCtx.drawImage(
-        playerImage,
-        spritesheetData.sx,
-        spritesheetData.sy,
-        spritesheetData.sWidth,
-        spritesheetData.sHeight,
+    CharacterSprites.renderCharacter(
+        this.canvasCtx,
         x + xOffset,
         y - yOffset,
-        width,
-        height
+        GameState.currentState.player.appearance,
+        animState.direction,
+        animState.walkFrame
     );
 };
 
@@ -569,7 +598,7 @@ SceneManager.wrapDialogueText = function(text, maxWidth){
 };
 
 /**
- * Renders all NPCs in the current area as coloured placeholder sprites.
+ * Renders all NPCs in the current area as pixel-art characters.
  * Draws an interaction prompt above any NPC within range of the player.
  */
 SceneManager.renderNpcs = function(){
@@ -582,9 +611,15 @@ SceneManager.renderNpcs = function(){
     for (var i = 0; i < npcs.length; i++){
         var npc = npcs[i];
 
-        // placeholder sprite — filled rect in the NPC's assigned colour
-        this.canvasCtx.fillStyle = npc.spriteColor;
-        this.canvasCtx.fillRect(npc.location.x, npc.location.y, npc.width, npc.height);
+        // Draw NPC as pixel-art character facing south (idle)
+        CharacterSprites.renderCharacter(
+            this.canvasCtx,
+            npc.location.x,
+            npc.location.y,
+            npc.appearance,
+            "S",
+            0
+        );
 
         // name label beneath the NPC
         this.canvasCtx.font = "10px " + GUI.dialogueBoxDetails.font;
