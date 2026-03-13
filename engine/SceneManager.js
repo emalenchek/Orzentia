@@ -184,59 +184,81 @@ SceneManager.renderWorldBackgroundImageToContext = function(){
 // };
 
 /**
- * Render pause menu text
+ * Render pause menu items onto the already-drawn box.
+ * @param {Number} boxX - canvas x of the box top-left (world-space, compensated)
+ * @param {Number} boxY - canvas y of the box top-left (world-space, compensated)
  */
-SceneManager.renderPauseMenuText = function(){
-    var pauseDetails = GUI.pauseMenuDetails;
+SceneManager.renderPauseMenuText = function(boxX, boxY){
+    var p = GUI.pauseMenuDetails;
+    var pad = p.padding;
 
-    var playerX = GameState.currentState.player.location.x;
-    var playerY = GameState.currentState.player.location.y;
+    // title
+    this.canvasCtx.fillStyle = p.borderColor;
+    this.canvasCtx.font = p.titleFontSize + "px " + p.font;
+    var titleWidth = this.canvasCtx.measureText(p.title).width;
+    var titleX = boxX + (p.width - titleWidth) / 2;
+    this.canvasCtx.fillText(p.title, titleX, boxY + pad + p.titleFontSize);
 
-    var posX = SceneManager.TILE_WIDTH * 2 + playerX;
-    var posY = SceneManager.TILE_HEIGHT * 2 - playerY;
+    // separator line beneath title
+    this.canvasCtx.fillStyle = p.borderColor;
+    this.canvasCtx.fillRect(
+        boxX + pad,
+        boxY + pad + p.titleFontSize + 6,
+        p.width - pad * 2,
+        1
+    );
 
-    this.canvasCtx.font = "32px " + pauseDetails.font;
+    // menu items — ">" cursor prefix for selected item, spaces for others
+    var itemStartY = boxY + pad + p.titleFontSize + 6 + pad;
+    this.canvasCtx.font = p.itemFontSize + "px " + p.font;
 
-    for (var i in pauseDetails.options){
-        // text style
-        this.canvasCtx.fillStyle = pauseDetails.foregroundColor;
-
-        // render text
-        this.canvasCtx.fillText(pauseDetails.options[i], posX, posY + (60 * Number(i)));
-
-        var textWidth = this.canvasCtx.measureText(pauseDetails.options[i]).width;
-
-        if (Number(i) === pauseDetails.cursorIndex){
-            // underline this text to show user the active highlighted element
-            this.canvasCtx.fillStyle = pauseDetails.foregroundColor;
-            this.canvasCtx.fillRect(posX, posY + (60 * Number(i)) + 10, textWidth, 2);
-        }
+    for (var i = 0; i < p.options.length; i++){
+        var isSelected = (i === p.cursorIndex);
+        this.canvasCtx.fillStyle = isSelected ? p.borderColor : p.foregroundColor;
+        var prefix = isSelected ? "> " : "  ";
+        this.canvasCtx.fillText(prefix + p.options[i], boxX + pad, itemStartY + (i * p.itemSpacing));
     }
+
+    // hint at the bottom
+    this.canvasCtx.fillStyle = p.borderColor;
+    this.canvasCtx.font = "10px " + p.font;
+    var hint = "[Z] Select  [X] Close";
+    var hintWidth = this.canvasCtx.measureText(hint).width;
+    this.canvasCtx.fillText(hint, boxX + (p.width - hintWidth) / 2, boxY + p.height - pad);
 };
 
 /**
- * Render the pause menu
+ * Render the pause menu — a screen-fixed overlay styled to match the
+ * furnace-world aesthetic (ash-black background, amber border, parchment text).
+ * Compensates for the world-scroll canvas transform the same way renderDialogueBox does.
  */
 SceneManager.renderPauseMenu = function(){
-    
-    var pauseDetails = GUI.pauseMenuDetails;
-
+    var p = GUI.pauseMenuDetails;
     var playerX = GameState.currentState.player.location.x;
     var playerY = GameState.currentState.player.location.y;
 
-    var posX = SceneManager.TILE_WIDTH + playerX;
-    var posY = SceneManager.TILE_HEIGHT - playerY;
-    var width = pauseDetails.width;
-    var height = pauseDetails.height;
+    // canvas transform is (e = -playerX, f = playerY); compensate to land at
+    // fixed screen position (p.screenX, p.screenY)
+    var boxX = p.screenX + playerX;
+    var boxY = p.screenY - playerY;
 
-    // want to clear the pause menu area
-    this.canvasCtx.clearRect(posX, posY, width, height);
-    this.canvasCtx.fillStyle = pauseDetails.backgroundColor;
-    // draw the pause menu area
-    this.canvasCtx.fillRect(posX, posY, width, height);
+    // ash-black fill
+    this.canvasCtx.fillStyle = p.backgroundColor;
+    this.canvasCtx.fillRect(boxX, boxY, p.width, p.height);
 
-    // Populate pause menu with text
-    SceneManager.renderPauseMenuText();
+    // amber outer border
+    this.canvasCtx.strokeStyle = p.borderColor;
+    this.canvasCtx.lineWidth = 2;
+    this.canvasCtx.strokeRect(boxX, boxY, p.width, p.height);
+
+    // inner border inset by 4px for a double-frame effect
+    this.canvasCtx.strokeStyle = p.borderColor;
+    this.canvasCtx.lineWidth = 1;
+    this.canvasCtx.globalAlpha = 0.4;
+    this.canvasCtx.strokeRect(boxX + 4, boxY + 4, p.width - 8, p.height - 8);
+    this.canvasCtx.globalAlpha = 1.0;
+
+    SceneManager.renderPauseMenuText(boxX, boxY);
 };
 
 /**

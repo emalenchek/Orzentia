@@ -7,9 +7,14 @@ var GUI = {};
 
 // Data associated with the pause menu for rendering
 GUI.pauseMenuDetails = {
-    title: "Pause Menu",
-    width: 400,
-    height: 400,
+    title: "~ Paused ~",
+    // box dimensions
+    width: 320,
+    height: 240,
+    // screen-space anchor (top-left corner, compensated for world transform like dialogueBoxDetails)
+    screenX: 90,
+    screenY: 130,
+    padding: 16,
     options: [
         "Inventory",
         "Character",
@@ -17,9 +22,14 @@ GUI.pauseMenuDetails = {
         "Save",
         "Return to Main Menu"
     ],
-    backgroundColor: "black",
-    foregroundColor: "white",
+    // furnace-world colour palette: ash-black bg, amber border, parchment text
+    backgroundColor: "#0e0b06",
+    foregroundColor: "#f0e8d8",
+    borderColor: "#c8821a",
     font: "JGS-7-FONT",
+    titleFontSize: 18,
+    itemFontSize: 14,
+    itemSpacing: 28,
     cursorIndex: 0
 };
 
