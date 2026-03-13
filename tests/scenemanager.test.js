@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it, before } = require('node:test');
+const { describe, it, before, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadEngine } = require('./helpers/setup');
 
@@ -79,5 +79,62 @@ describe('SceneManager.getTrueLocation', () => {
     it('y result is always a finite number', () => {
         const result = SceneManager.getTrueLocation(100, 200);
         assert.ok(Number.isFinite(result.y));
+    });
+});
+
+// ─── SceneManager.wrapDialogueText ────────────────────────────────────────────
+// Override canvasCtx.measureText to return width = text.length * 8 so that
+// line-wrapping behaviour is deterministic and independent of the real font.
+//
+// With 8px per character and a maxWidth of 72:
+//   'hello'       = 40px  (fits)
+//   'hello world' = 88px  (exceeds → wraps after 'hello')
+//   'world test'  = 80px  (exceeds → wraps after 'world')
+describe('SceneManager.wrapDialogueText', () => {
+    let SceneManager;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        SceneManager = ctx.SceneManager;
+        // 8px per character gives predictable, integer-friendly measurements
+        SceneManager.canvasCtx.measureText = (text) => ({ width: text.length * 8 });
+    });
+
+    it('returns a single-element array when text fits within maxWidth', () => {
+        // 'hi' = 16px, maxWidth = 200 → no wrap
+        const lines = SceneManager.wrapDialogueText('hi', 200);
+        assert.strictEqual(lines.length, 1);
+        assert.strictEqual(lines[0], 'hi');
+    });
+
+    it('wraps into two lines when the combined width exceeds maxWidth', () => {
+        // 'hello world' = 88px > 72 → split after 'hello'
+        const lines = SceneManager.wrapDialogueText('hello world', 72);
+        assert.strictEqual(lines.length, 2);
+        assert.strictEqual(lines[0], 'hello');
+        assert.strictEqual(lines[1], 'world');
+    });
+
+    it('wraps into three lines when every pair of words exceeds maxWidth', () => {
+        // 'ab' = 16px, 'ab cd' = 40px > 32 → each word on its own line
+        const lines = SceneManager.wrapDialogueText('ab cd ef', 32);
+        assert.strictEqual(lines.length, 3);
+        assert.strictEqual(lines[0], 'ab');
+        assert.strictEqual(lines[1], 'cd');
+        assert.strictEqual(lines[2], 'ef');
+    });
+
+    it('places an oversized single word on its own line rather than discarding it', () => {
+        // 'superlongword' = 104px > 72, but currentLine is empty so it cannot be
+        // pushed — the word lands on line 1, then 'next' follows on line 2
+        const lines = SceneManager.wrapDialogueText('superlongword next', 72);
+        assert.strictEqual(lines[0], 'superlongword');
+        assert.strictEqual(lines[1], 'next');
+    });
+
+    it('returns an array whose elements are strings', () => {
+        const lines = SceneManager.wrapDialogueText('test phrase here', 200);
+        assert.ok(lines.length > 0);
+        assert.strictEqual(typeof lines[0], 'string');
     });
 });

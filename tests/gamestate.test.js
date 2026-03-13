@@ -2,7 +2,7 @@
 
 const { describe, it, before, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
-const { loadEngine, makeGameState, makeEnemy } = require('./helpers/setup');
+const { loadEngine, makeGameState, makeEnemy, makeNpc } = require('./helpers/setup');
 
 // ─── isLocationAvailable ──────────────────────────────────────────────────────
 // Checks a 4-point AABB against GameState.collisionsLookup.
@@ -655,5 +655,218 @@ describe('GameState.updateActiveAttack — melee', () => {
         GameState.currentState.activeAttacks.push(attack);
         GameState.updateActiveAttack(attack);
         assert.strictEqual(GameState.currentState.activeAttacks.length, 0);
+    });
+});
+
+// ─── advanceDialogue ──────────────────────────────────────────────────────────
+// Player at offset (0,0) → true canvas position (239, 234) per getTrueLocation.
+// makeNpc() defaults to location { x:280, y:234 }, distance ≈ 41px (< 80 range).
+describe('GameState.advanceDialogue', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+        GameState.collisionsLookup = {};
+    });
+
+    it('increments pageIndex by 1', () => {
+        const npc = makeNpc({ dialogue: ['Page 1', 'Page 2', 'Page 3'] });
+        GameState.currentState.activeDialogue = { npc, pageIndex: 0 };
+        GameState.advanceDialogue();
+        assert.strictEqual(GameState.currentState.activeDialogue.pageIndex, 1);
+    });
+
+    it('keeps dialogue open when advancing to a non-final page', () => {
+        const npc = makeNpc({ dialogue: ['Page 1', 'Page 2', 'Page 3'] });
+        GameState.currentState.activeDialogue = { npc, pageIndex: 0 };
+        GameState.advanceDialogue();
+        assert.notStrictEqual(GameState.currentState.activeDialogue, null);
+    });
+
+    it('closes dialogue (sets activeDialogue to null) when the last page is advanced past', () => {
+        const npc = makeNpc({ dialogue: ['Page 1', 'Page 2'] });
+        GameState.currentState.activeDialogue = { npc, pageIndex: 1 };
+        GameState.advanceDialogue();
+        assert.strictEqual(GameState.currentState.activeDialogue, null);
+    });
+
+    it('does nothing when activeDialogue is null', () => {
+        GameState.currentState.activeDialogue = null;
+        GameState.advanceDialogue(); // must not throw
+        assert.strictEqual(GameState.currentState.activeDialogue, null);
+    });
+});
+
+// ─── interactWithNearbyNpc ────────────────────────────────────────────────────
+describe('GameState.interactWithNearbyNpc', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+        GameState.collisionsLookup = {};
+    });
+
+    it('opens dialogue with a nearby NPC', () => {
+        GameState.currentState.spawnedNpcs.push(makeNpc());
+        GameState.interactWithNearbyNpc();
+        assert.notStrictEqual(GameState.currentState.activeDialogue, null);
+    });
+
+    it('sets pageIndex to 0 when opening dialogue', () => {
+        GameState.currentState.spawnedNpcs.push(makeNpc());
+        GameState.interactWithNearbyNpc();
+        assert.strictEqual(GameState.currentState.activeDialogue.pageIndex, 0);
+    });
+
+    it('does not open dialogue when no NPC is within range', () => {
+        // Location far outside the 80px interaction range of player at (239,234)
+        GameState.currentState.spawnedNpcs.push(makeNpc({ location: { x: 700, y: 700 } }));
+        GameState.interactWithNearbyNpc();
+        assert.strictEqual(GameState.currentState.activeDialogue, null);
+    });
+
+    it('selects the closest NPC when multiple are in range', () => {
+        // 'Close' is 21px away, 'Far' is 61px away — both within 80px range
+        const close = makeNpc({ name: 'Close', location: { x: 260, y: 234 } });
+        const far   = makeNpc({ name: 'Far',   location: { x: 300, y: 234 } });
+        GameState.currentState.spawnedNpcs.push(close, far);
+        GameState.interactWithNearbyNpc();
+        assert.strictEqual(GameState.currentState.activeDialogue.npc.name, 'Close');
+    });
+});
+
+// ─── createNewGameState — NPC spawning ───────────────────────────────────────
+describe('GameState.createNewGameState — NPC spawning', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.collisionsLookup = {};
+        GameState.createNewGameState();
+    });
+
+    it('populates spawnedNpcs with all village NPC definitions', () => {
+        assert.strictEqual(
+            GameState.currentState.spawnedNpcs.length,
+            GameState.villageNpcDefinitions.length
+        );
+    });
+
+    it('each spawned NPC has a non-empty name', () => {
+        assert.ok(GameState.currentState.spawnedNpcs[0].name.length > 0);
+    });
+
+    it('each spawned NPC has a non-empty dialogue array', () => {
+        assert.ok(GameState.currentState.spawnedNpcs[0].dialogue.length > 0);
+    });
+
+    it('NPCs are independent copies — mutating one does not affect the definition', () => {
+        GameState.currentState.spawnedNpcs[0].name = 'Mutated';
+        assert.notStrictEqual(GameState.villageNpcDefinitions[0].name, 'Mutated');
+    });
+});
+
+// ─── input: F key and Z key dialogue handling ─────────────────────────────────
+describe('updatePlayerLocation — F key dialogue interaction', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+        GameState.collisionsLookup = {};
+    });
+
+    it('pressing F opens dialogue with a nearby NPC when no dialogue is active', () => {
+        GameState.currentState.spawnedNpcs.push(makeNpc());
+        GameState.activeKeys = ['F'];
+        GameState.updatePlayerLocation();
+        assert.notStrictEqual(GameState.currentState.activeDialogue, null);
+    });
+
+    it('pressing F advances existing dialogue when dialogue is already active', () => {
+        const npc = makeNpc({ dialogue: ['Page 1', 'Page 2'] });
+        GameState.currentState.activeDialogue = { npc, pageIndex: 0 };
+        GameState.activeKeys = ['F'];
+        GameState.updatePlayerLocation();
+        assert.strictEqual(GameState.currentState.activeDialogue.pageIndex, 1);
+    });
+});
+
+describe('updatePlayerLocation — Z key dialogue / attack routing', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+        GameState.collisionsLookup = {};
+    });
+
+    it('pressing Z advances dialogue when dialogue is active', () => {
+        const npc = makeNpc({ dialogue: ['Page 1', 'Page 2'] });
+        GameState.currentState.activeDialogue = { npc, pageIndex: 0 };
+        GameState.activeKeys = ['Z'];
+        GameState.updatePlayerLocation();
+        assert.strictEqual(GameState.currentState.activeDialogue.pageIndex, 1);
+    });
+
+    it('pressing Z performs a light attack when no dialogue is active', () => {
+        GameState.currentState.activeDialogue = null;
+        GameState.activeKeys = ['Z'];
+        GameState.updatePlayerLocation();
+        assert.strictEqual(GameState.currentState.activeAttacks.length, 1);
+    });
+});
+
+describe('updatePlayerLocation — arrow keys blocked during dialogue', () => {
+    let GameState;
+
+    beforeEach(() => {
+        const ctx = loadEngine();
+        GameState = ctx.GameState;
+        GameState.currentState = makeGameState();
+        GameState.collisionsLookup = {};
+    });
+
+    it('ArrowUp does not move the player when dialogue is active', () => {
+        const npc = makeNpc();
+        GameState.currentState.activeDialogue = { npc, pageIndex: 0 };
+        GameState.currentState.player.location.y = 0;
+        GameState.activeKeys = ['ArrowUp'];
+        GameState.updatePlayerLocation();
+        assert.strictEqual(GameState.currentState.player.location.y, 0);
+    });
+
+    it('ArrowDown does not move the player when dialogue is active', () => {
+        const npc = makeNpc();
+        GameState.currentState.activeDialogue = { npc, pageIndex: 0 };
+        GameState.currentState.player.location.y = 0;
+        GameState.activeKeys = ['ArrowDown'];
+        GameState.updatePlayerLocation();
+        assert.strictEqual(GameState.currentState.player.location.y, 0);
+    });
+
+    it('ArrowRight does not move the player when dialogue is active', () => {
+        const npc = makeNpc();
+        GameState.currentState.activeDialogue = { npc, pageIndex: 0 };
+        GameState.currentState.player.location.x = 0;
+        GameState.activeKeys = ['ArrowRight'];
+        GameState.updatePlayerLocation();
+        assert.strictEqual(GameState.currentState.player.location.x, 0);
+    });
+
+    it('ArrowLeft does not move the player when dialogue is active', () => {
+        const npc = makeNpc();
+        GameState.currentState.activeDialogue = { npc, pageIndex: 0 };
+        GameState.currentState.player.location.x = 0;
+        GameState.activeKeys = ['ArrowLeft'];
+        GameState.updatePlayerLocation();
+        assert.strictEqual(GameState.currentState.player.location.x, 0);
     });
 });
