@@ -82,6 +82,162 @@ it requires a sharp eye: improperly salvaged ashglass can contaminate future
 fuel batches. He knows the furnaces better than anyone, knows their moods
 and their heat.
 
+### Squink
+A **fish-cat chimera** — one of the king's experimental crossbreeds, since
+discarded. Lean and low to the ground, with iridescent scales running his
+spine and the slow amber eyes of a barn cat. He drifted into the village
+some weeks ago and has not explained himself. The clan tolerates him
+because he keeps to himself and causes no trouble.
+
+He is aloof in the way that suggests he has seen things he does not intend
+to discuss. He is not unfriendly — just unhurried. Occasionally he says
+something that could mean two things, and does not wait to find out which
+one you took it as.
+
+He doesn't breathe fire. He doesn't fly. He is, by the kingdom's metrics,
+a failure. He seems unbothered by this.
+
+---
+
+## Village Layout
+
+```
+     [Village Gate / Road South]
+              |
+     [Kael — Emissary Return Point]
+              |
+  [Maret]--[Salvage Yard]--[Furnace Tunnels]--[Squink]
+                               |
+              [Furnace Ring — 7 Obelisks]
+             /        |        \
+        [Edren]    [Eggs]    [Old Brenn]
+                               |
+               [Archive Building — Sela]
+```
+
+### Key Locations
+
+| Location | Description |
+|---|---|
+| Furnace Ring | Center of the village. Seven ancient stone obelisks arranged in a ring. Each houses an egg chamber. The air shimmers here at all hours. |
+| Salvage Yard | The ash-pit east of the ring where burned jewel residue collects. The son's workstation. Buckets, tools, ashglass fragments. |
+| Archive Building | Stone structure with thick walls to protect the records. Sela's domain. Temperature logs, requisition orders, breeding lineage scrolls. |
+| Furnace Tunnels | Deep-stone maintenance passages beneath the furnace ring. Cool, dark, and quiet. The son knows them by touch. |
+| Village Gate | Simple wooden gate on the road south toward the capital. Where the kingdom messenger arrived. Where Kael returned. |
+
+---
+
+## NPC Roster & Dialogue Scripts
+
+All dialogue uses the JRPG convention: press **F** or **Z** to advance,
+one speaker per box, name displayed in the header.
+
+---
+
+### Edren (Father / Head Breeder)
+*Location: Furnace Ring, near the central obelisk*
+*Tone: Measured, quiet, competent*
+
+| Page | Line |
+|---|---|
+| 1 | "Still at it. The night stoke finished well — good ashglass across the eastern furnace." |
+| 2 | "Sort through it carefully. The last batch had contamination mixed in. We can't afford a spoiled load." |
+| 3 | "The eggs are stable. Go on." |
+
+---
+
+### Sela (Sister / Clan Archivist)
+*Location: Archive Building*
+*Tone: Precise, slightly terse, quietly worried*
+
+| Page | Line |
+|---|---|
+| 1 | "Don't track ash in here. I just finished cataloguing the cycle logs." |
+| 2 | "The kingdom's monthly supply order arrived. Same quantities as last season. Nothing unusual." |
+| 3 | "Father's been up since the third bell. He won't say why." |
+
+---
+
+### Old Brenn (Elder Tender)
+*Location: Furnace Ring, oldest obelisk on the west side*
+*Tone: Unhurried, weathered, fond*
+
+| Page | Line |
+|---|---|
+| 1 | "I was your age when they last stoked this one for a fresh clutch. Forty-three years ago, that was." |
+| 2 | "People always ask me how I stand the waiting. You get used to it. Or you don't, and you leave." |
+| 3 | "These old stones remember every fire we've given them. Treat them with respect." |
+
+---
+
+### Maret (Young Tender / Peer)
+*Location: Salvage Yard*
+*Tone: Curious, slightly nervous, deflects with humor*
+
+| Page | Line |
+|---|---|
+| 1 | "Did you see the messenger from the capital? Rode in this morning. Didn't even water his horse first." |
+| 2 | "Father Edren looked calm when he read the letter. You know how he gets when he's actually calm." |
+| 3 | "I'm sure it's nothing. It's always nothing. Right?" |
+
+---
+
+### Kael (Returned Emissary)
+*Location: Village Gate / road entrance, just arrived*
+*Tone: Tired, guarded, choosing words carefully*
+
+| Page | Line |
+|---|---|
+| 1 | "Long road back. The capital's noisier than I remembered. More soldiers everywhere." |
+| 2 | "Don't ask me about it yet. I need to speak with Sela first. Officially." |
+| 3 | "Just — keep doing what you're doing. I'll explain everything soon." |
+
+---
+
+### Squink
+*Location: Furnace Tunnel entrance / village wall, slightly out of the way*
+*Tone: Aloof, dry, occasionally a little flirtatious — never explains himself*
+
+| Page | Line |
+|---|---|
+| 1 | "You're the one they have picking up the ashes. I could think of worse jobs. I have thought of worse jobs." |
+| 2 | "The heat doesn't bother me. In case you were wondering." |
+| 3 | "You keep coming back. I'll call that progress." |
+
+---
+
+## Opening Game Sequence
+
+The game begins **before dawn**. The player character is already at the
+salvage yard, picking through the cooling ash from the night stoke.
+
+1. **Tutorial prompt** — basic movement and interaction (F to talk) is
+   introduced through the environment. A short text overlay establishes
+   the setting before control is given to the player.
+
+2. **Edren approaches** (or player walks to the furnace ring) — first
+   mandatory conversation. Edren checks in, confirms the eggs are stable,
+   and tells the player to finish the salvage. This is the player's
+   introduction to the core loop of village life.
+
+3. **Free exploration** — the player can speak to all five NPCs before
+   the inciting event. Each NPC hints at the tension building around the
+   kingdom messenger's visit.
+
+4. **The messenger scene** — a scripted event where the messenger is
+   seen leaving the council hall and riding out. Edren walks to the
+   archive building to meet Sela. The player can follow or continue
+   exploring.
+
+5. **Kael returns** — if the player goes to the village gate, Kael is
+   there, just arrived, looking shaken. He deflects questions but his
+   arrival is clearly significant.
+
+6. **Optional: find Squink** — Squink is tucked near the tunnel entrance.
+   He will not seek out the player. If found, his three lines drop the
+   first hint that the world beyond the village is not what the clan
+   believes it to be.
+
 ---
 
 ## The Conflict
@@ -123,6 +279,10 @@ intensity, their ride-weight tolerance, their near-supernatural **bondability**
 with riders. But chimeras are alive, and they are growing, and they can be
 conscripted.
 
+Squink is one of these chimeras. He escapes — or is discarded as a
+failed specimen — and wanders until he finds the village. He does not
+explain where he came from. He sits near the furnace tunnels. He stays.
+
 ### Act Three — The Village Learns
 
 One of the 25-year emissary exchanges brings the truth home. A young clan
@@ -163,8 +323,11 @@ temperature logs, Sela's personal cipher key found under a collapsed beam.
 
 The furnace-obelisks are rubble. The work of generations is ash.
 
-They have each other, and what they can carry. The question of what comes
-next hangs between them, unanswered.
+Squink finds them in the ruins. He does not say where he hid during the
+attack. He sits near the son in the silence, and does not leave.
+
+They have each other, Squink, and what they can carry. The question of
+what comes next hangs between them, unanswered.
 
 ---
 
@@ -180,7 +343,8 @@ next hangs between them, unanswered.
 | 6 | The Ultimatum Departs | Village outskirts | Edren sends the message with a trusted rider. Son watches him go. Father and son share a rare quiet meal. | Bittersweet, ominous |
 | 7 | The Attack | Entire village | Soldiers arrive before dawn. Fire. The obelisks fall. Edren and son in the tunnels. Sounds above them. | Brutal, chaotic |
 | 8 | Aftermath | Ruins | The son and Edren emerge. They move through the wreckage. They do not speak much. They salvage. | Grief, silence |
-| 9 | The Road Begins | Village outskirts, moving away | Father and son leave the village. Where they are going is not yet decided. The egg temperature log is in the son's pack. | Open, forward-moving |
+| 9 | Squink Returns | Ruins | Squink appears from somewhere in the wreckage. He sits near the son. No explanation offered. | Strange quiet |
+| 10 | The Road Begins | Village outskirts, moving away | Father, son, and Squink leave. Where they are going is not yet decided. The egg temperature log is in the son's pack. | Open, forward-moving |
 
 ---
 
@@ -191,6 +355,9 @@ next hangs between them, unanswered.
   or her survival — scattered into hiding — could be a reunion plot point.)
 - What does the one surviving dragon egg mean for the story? Does the village
   retain it? Is it hidden in the tunnels?
+- What is the exact nature of Squink's bond with the son — is it a diminished
+  version of the sacred dragon bondability, or something entirely new? Does
+  Squink himself know?
 - How does this village narrative connect to the broader Orzentia main story
   (the Ameni, the Binding, King Andrien)?
 - What role do the neighboring nations — the ones building the coalition against

@@ -521,6 +521,137 @@ SceneManager.displayGameOverScreen = function(){
 };
 
 /**
+ * Splits a dialogue string into lines that fit within maxWidth pixels.
+ * Must be called after setting the canvas font so measureText is accurate.
+ * @param {String} text - the dialogue string to wrap
+ * @param {Number} maxWidth - maximum pixel width per line
+ * @returns {Array} array of line strings
+ */
+SceneManager.wrapDialogueText = function(text, maxWidth){
+    var words = text.split(' ');
+    var lines = [];
+    var currentLine = '';
+
+    for (var i = 0; i < words.length; i++){
+        var testLine = currentLine ? currentLine + ' ' + words[i] : words[i];
+        var testWidth = this.canvasCtx.measureText(testLine).width;
+        if (testWidth > maxWidth && currentLine){
+            lines.push(currentLine);
+            currentLine = words[i];
+        } else {
+            currentLine = testLine;
+        }
+    }
+    if (currentLine){ lines.push(currentLine); }
+    return lines;
+};
+
+/**
+ * Renders all NPCs in the current area as coloured placeholder sprites.
+ * Draws an interaction prompt above any NPC within range of the player.
+ */
+SceneManager.renderNpcs = function(){
+    var npcs = GameState.currentState.spawnedNpcs;
+    if (!npcs || !npcs.length){ return; }
+
+    var playerLoc = GameState.currentState.player.location;
+    var playerTrueLoc = SceneManager.getTrueLocation(playerLoc.x, playerLoc.y);
+
+    for (var i = 0; i < npcs.length; i++){
+        var npc = npcs[i];
+
+        // placeholder sprite — filled rect in the NPC's assigned colour
+        this.canvasCtx.fillStyle = npc.spriteColor;
+        this.canvasCtx.fillRect(npc.location.x, npc.location.y, npc.width, npc.height);
+
+        // name label beneath the NPC
+        this.canvasCtx.font = "10px " + GUI.dialogueBoxDetails.font;
+        this.canvasCtx.fillStyle = "white";
+        this.canvasCtx.fillText(
+            npc.name,
+            npc.location.x,
+            npc.location.y + npc.height + 12
+        );
+
+        // show [F] prompt when player is in range and no dialogue is open
+        var dist = Game.getDistanceBetweenPoints(playerTrueLoc, npc.location);
+        if (dist <= npc.interactionRange && !GameState.currentState.activeDialogue){
+            this.canvasCtx.fillStyle = "yellow";
+            this.canvasCtx.font = "bold 14px " + GUI.dialogueBoxDetails.font;
+            this.canvasCtx.fillText(
+                "[F]",
+                npc.location.x + (npc.width / 2) - 10,
+                npc.location.y - 6
+            );
+        }
+    }
+};
+
+/**
+ * Renders the JRPG-style dialogue box anchored to the bottom of the screen.
+ * Compensates for the canvas world-scroll transform so the box stays at a
+ * fixed visual position regardless of the player's world location.
+ */
+SceneManager.renderDialogueBox = function(){
+    var dialogue = GameState.currentState.activeDialogue;
+    if (!dialogue){ return; }
+
+    var box = GUI.dialogueBoxDetails;
+    var playerX = GameState.currentState.player.location.x;
+    var playerY = GameState.currentState.player.location.y;
+
+    // canvas transform is (e = -playerX, f = playerY); to land at fixed screen
+    // position (box.screenX, box.screenY) we draw at:
+    var boxX = box.screenX + playerX;
+    var boxY = box.screenY - playerY;
+    var pad = box.padding;
+
+    // background
+    this.canvasCtx.fillStyle = box.backgroundColor;
+    this.canvasCtx.fillRect(boxX, boxY, box.width, box.height);
+
+    // border
+    this.canvasCtx.strokeStyle = box.borderColor;
+    this.canvasCtx.lineWidth = 2;
+    this.canvasCtx.strokeRect(boxX, boxY, box.width, box.height);
+
+    // NPC name header
+    this.canvasCtx.fillStyle = box.foregroundColor;
+    this.canvasCtx.font = box.nameFontSize + "px " + box.font;
+    this.canvasCtx.fillText(dialogue.npc.name, boxX + pad, boxY + pad + box.nameFontSize);
+
+    // separator line
+    this.canvasCtx.fillRect(
+        boxX + pad,
+        boxY + pad + box.nameFontSize + 4,
+        box.width - pad * 2,
+        1
+    );
+
+    // word-wrapped dialogue text
+    var pageText = dialogue.npc.dialogue[dialogue.pageIndex];
+    this.canvasCtx.font = box.textFontSize + "px " + box.font;
+    var lines = SceneManager.wrapDialogueText(pageText, box.width - pad * 2);
+    var textStartY = boxY + pad + box.nameFontSize + 4 + pad;
+    var lineHeight = box.textFontSize + 5;
+
+    for (var i = 0; i < lines.length; i++){
+        this.canvasCtx.fillText(lines[i], boxX + pad, textStartY + (i * lineHeight));
+    }
+
+    // advance indicator when more pages remain
+    if (dialogue.pageIndex < dialogue.npc.dialogue.length - 1){
+        this.canvasCtx.fillStyle = box.foregroundColor;
+        this.canvasCtx.font = "bold " + box.textFontSize + "px " + box.font;
+        this.canvasCtx.fillText(
+            box.advanceIndicator,
+            boxX + box.width - pad - 8,
+            boxY + box.height - pad
+        );
+    }
+};
+
+/**
  * Update the state of the current scene
  */
 SceneManager.updateActiveScene = function(){
@@ -573,6 +704,14 @@ SceneManager.updateActiveScene = function(){
 
             // Need to render all projectiles
             SceneManager.renderAttackAnimations();
+
+            // Render NPCs and interaction prompts
+            SceneManager.renderNpcs();
+
+            // Render dialogue box on top when a conversation is active
+            if (GameState.currentState.activeDialogue){
+                SceneManager.renderDialogueBox();
+            }
         }
 
 
