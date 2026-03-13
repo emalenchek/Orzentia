@@ -104,6 +104,8 @@ function makeGameState(overrides) {
         activeMenu: null,
         activeAttacks: [],
         spawnedEnemies: [],
+        spawnedNpcs: [],
+        activeDialogue: null,
         player: {
             health: 5,
             maxHealth: 5,
@@ -173,4 +175,27 @@ function makeEnemy(overrides) {
     return base;
 }
 
-module.exports = { loadEngine, makeGameState, makeEnemy };
+/**
+ * Returns a minimal NPC object for use in tests.
+ * Mirrors the shape of GameState.exampleNpc.
+ * Default location (x:280, y:234) is ~41px from the player's true position
+ * at offset (0,0) — well within the default interactionRange of 80.
+ */
+function makeNpc(overrides) {
+    const base = {
+        name: 'Test NPC',
+        location: { x: 280, y: 234 },
+        spriteColor: '#aabbcc',
+        width: 22,
+        height: 32,
+        interactionRange: 80,
+        dialogue: ['Hello.', 'Goodbye.']
+    };
+
+    if (overrides) {
+        Object.assign(base, overrides);
+    }
+    return base;
+}
+
+module.exports = { loadEngine, makeGameState, makeEnemy, makeNpc };

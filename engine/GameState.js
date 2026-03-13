@@ -5,6 +5,112 @@
 // initialize game state object
 var GameState = {};
 
+/**
+ * Template for a non-player character (NPC).
+ * NPCs are stationary, interactable via the F key when in range,
+ * and deliver multi-page dialogue in JRPG style.
+ */
+GameState.exampleNpc = {
+    "name": "Villager",
+    // world-space position (same coordinate system as enemies)
+    "location": { x: 250, y: 250 },
+    // placeholder colour used until a real spritesheet is assigned
+    "spriteColor": "#8899aa",
+    "width": 22,
+    "height": 32,
+    // player must be within this many pixels (true canvas coords) to interact
+    "interactionRange": 80,
+    // array of dialogue strings; each string is one "page" in the dialogue box
+    "dialogue": [ "..." ]
+};
+
+/**
+ * Village NPC definitions loaded at game start.
+ * Positions are in absolute canvas/world coordinates.
+ * The player starts at offset (0,0) which maps to true canvas position ~(239, 234),
+ * so NPCs are spread around that origin.
+ */
+GameState.villageNpcDefinitions = [
+    {
+        "name": "Edren",
+        "location": { x: 320, y: 180 },
+        "spriteColor": "#c87941",
+        "width": 22,
+        "height": 32,
+        "interactionRange": 80,
+        "dialogue": [
+            "Still at it. The night stoke finished well -- good ashglass across the eastern furnace.",
+            "Sort through it carefully. The last batch had contamination mixed in. We can't afford a spoiled load.",
+            "The eggs are stable. Go on."
+        ]
+    },
+    {
+        "name": "Sela",
+        "location": { x: 140, y: 200 },
+        "spriteColor": "#7a9fc4",
+        "width": 22,
+        "height": 32,
+        "interactionRange": 80,
+        "dialogue": [
+            "Don't track ash in here. I just finished cataloguing the cycle logs.",
+            "The kingdom's monthly supply order arrived. Same quantities as last season. Nothing unusual.",
+            "Father's been up since the third bell. He won't say why."
+        ]
+    },
+    {
+        "name": "Old Brenn",
+        "location": { x: 365, y: 255 },
+        "spriteColor": "#9e8b6f",
+        "width": 22,
+        "height": 32,
+        "interactionRange": 80,
+        "dialogue": [
+            "I was your age when they last stoked this one for a fresh clutch. Forty-three years ago, that was.",
+            "People always ask me how I stand the waiting. You get used to it. Or you don't, and you leave.",
+            "These old stones remember every fire we've given them. Treat them with respect."
+        ]
+    },
+    {
+        "name": "Maret",
+        "location": { x: 220, y: 315 },
+        "spriteColor": "#7dbb8a",
+        "width": 22,
+        "height": 32,
+        "interactionRange": 80,
+        "dialogue": [
+            "Did you see the messenger from the capital? Rode in this morning. Didn't even water his horse first.",
+            "Father Edren looked calm when he read the letter. You know how he gets when he's actually calm.",
+            "I'm sure it's nothing. It's always nothing. Right?"
+        ]
+    },
+    {
+        "name": "Kael",
+        "location": { x: 100, y: 315 },
+        "spriteColor": "#b07ab0",
+        "width": 22,
+        "height": 32,
+        "interactionRange": 80,
+        "dialogue": [
+            "Long road back. The capital's noisier than I remembered. More soldiers everywhere.",
+            "Don't ask me about it yet. I need to speak with Sela first. Officially.",
+            "Just -- keep doing what you're doing. I'll explain everything soon."
+        ]
+    },
+    {
+        "name": "Squink",
+        "location": { x: 385, y: 315 },
+        "spriteColor": "#4da89e",
+        "width": 22,
+        "height": 32,
+        "interactionRange": 80,
+        "dialogue": [
+            "You're the one they have picking up the ashes. I could think of worse jobs. I have thought of worse jobs.",
+            "The heat doesn't bother me. In case you were wondering.",
+            "You keep coming back. I'll call that progress."
+        ]
+    }
+];
+
 GameState.exampleEnemy = {
     "name": "Red Slime",
     "type": "monster",
@@ -103,6 +209,10 @@ GameState.newStateTemplate = {
     "activeMenu": null,
     "activeAttacks": [],
     "spawnedEnemies": [],
+    // NPCs present in the current area
+    "spawnedNpcs": [],
+    // set to { npc: Object, pageIndex: Number } while a dialogue is open
+    "activeDialogue": null,
     "isPaused": false
 };
 
@@ -119,6 +229,14 @@ GameState.createNewGameState = function(){
     // set currentState to the new state
     GameState.currentState = state;
     GameState.currentState.isActive = true;
+
+    // spawn village NPCs
+    for (var i = 0; i < GameState.villageNpcDefinitions.length; i++){
+        GameState.currentState.spawnedNpcs.push(
+            JSON.parse(JSON.stringify(GameState.villageNpcDefinitions[i]))
+        );
+    }
+
     SceneManager.updateActiveScene();
 };
 
@@ -168,7 +286,7 @@ GameState.updatePlayerLocation = function(){
     GameState.activeKeys.map(function(key){
         switch (key){
             case "ArrowUp":
-                if (GameState.currentState){
+                if (GameState.currentState && !GameState.currentState.activeDialogue){
                     if (GameState.currentState.isActive){
                         // need to peek at new location to see if available
                         var newLocation = {
@@ -192,7 +310,7 @@ GameState.updatePlayerLocation = function(){
                 }
                 break;
             case "ArrowDown":
-                if (GameState.currentState){
+                if (GameState.currentState && !GameState.currentState.activeDialogue){
                     if (GameState.currentState.isActive){
                         // need to peek at new location to see if available
                         var newLocation = {
@@ -216,7 +334,7 @@ GameState.updatePlayerLocation = function(){
                 }
                 break;
             case "ArrowRight":
-                if (GameState.currentState){
+                if (GameState.currentState && !GameState.currentState.activeDialogue){
                     if (GameState.currentState.isActive){
                         // need to peek at new location to see if available
                         var newLocation = {
@@ -234,7 +352,7 @@ GameState.updatePlayerLocation = function(){
                 break;
             case "ArrowLeft":
                 // need to peek at new location to see if available
-                if (GameState.currentState){
+                if (GameState.currentState && !GameState.currentState.activeDialogue){
                     if (GameState.currentState.isActive){
                         var newLocation = {
                             "x": GameState.currentState.player.location.x -
@@ -251,13 +369,24 @@ GameState.updatePlayerLocation = function(){
                 break;
             case "f":
             case "F":
-                // interact with npcs/push buttons/etc.
+                // remove key so action fires once per key-press
+                GameState.activeKeys.splice(GameState.activeKeys.indexOf(key), 1);
+                if (GameState.currentState.activeDialogue){
+                    GameState.advanceDialogue();
+                } else {
+                    GameState.interactWithNearbyNpc();
+                }
                 break;
             case "z":
             case "Z":
                 // remove key so attack fires once per key-press, not every frame
                 GameState.activeKeys.splice(GameState.activeKeys.indexOf(key), 1);
-                GameState.playerActions.lightAttack();
+                if (GameState.currentState.activeDialogue){
+                    // Z also advances dialogue (common JRPG convention)
+                    GameState.advanceDialogue();
+                } else {
+                    GameState.playerActions.lightAttack();
+                }
                 break;
             case "X":
             case "x":
@@ -345,6 +474,50 @@ GameState.isLocationAvailable = function(newLocation, isTrue, entity){
 
     return true;
 }
+
+/**
+ * Opens dialogue with the nearest NPC within interaction range.
+ * Called when the player presses F and no dialogue is already active.
+ */
+GameState.interactWithNearbyNpc = function(){
+    var playerOffsetLoc = GameState.currentState.player.location;
+    var playerTrueLoc = SceneManager.getTrueLocation(playerOffsetLoc.x, playerOffsetLoc.y);
+
+    var npcs = GameState.currentState.spawnedNpcs;
+    var closestNpc = null;
+    var closestDist = Infinity;
+
+    for (var i = 0; i < npcs.length; i++){
+        var npc = npcs[i];
+        var dist = Game.getDistanceBetweenPoints(playerTrueLoc, npc.location);
+        if (dist <= npc.interactionRange && dist < closestDist){
+            closestNpc = npc;
+            closestDist = dist;
+        }
+    }
+
+    if (closestNpc){
+        GameState.currentState.activeDialogue = {
+            "npc": closestNpc,
+            "pageIndex": 0
+        };
+    }
+};
+
+/**
+ * Advances to the next page of the active dialogue.
+ * Closes the dialogue box when the last page is reached.
+ */
+GameState.advanceDialogue = function(){
+    if (!GameState.currentState.activeDialogue){ return; }
+
+    var dialogue = GameState.currentState.activeDialogue;
+    dialogue.pageIndex++;
+
+    if (dialogue.pageIndex >= dialogue.npc.dialogue.length){
+        GameState.currentState.activeDialogue = null;
+    }
+};
 
 GameState.playerActions = {};
 

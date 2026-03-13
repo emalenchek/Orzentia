@@ -50,3 +50,22 @@ GUI.mainMenuDetails = {
     cursorIndex: 0
 };
 
+// Data associated with the JRPG-style dialogue box
+GUI.dialogueBoxDetails = {
+    // screen-space dimensions (canvas is 500x500)
+    width: 460,
+    height: 130,
+    // distance from left/bottom edge of the canvas
+    screenX: 20,
+    screenY: 350,
+    padding: 14,
+    backgroundColor: "black",
+    foregroundColor: "white",
+    borderColor: "white",
+    font: "JGS-7-FONT",
+    nameFontSize: 18,
+    textFontSize: 14,
+    // indicator shown in the bottom-right corner when more pages remain
+    advanceIndicator: ">"
+};
+
