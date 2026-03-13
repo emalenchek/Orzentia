@@ -349,6 +349,8 @@ These features are scaffolded or partially stubbed:
 4. **Global namespace pattern** — new systems should follow the existing pattern (a single global object with methods). Do not introduce ES modules or class syntax without discussion.
 5. **Preload assets in `index.html`** — any new image/sprite must have a hidden `<img>` element added to `index.html` so it is available at runtime.
 6. **Test new game logic** — a `tests/` suite exists using `node:test`. When adding non-trivial logic to the engine, add corresponding tests. Follow the patterns in the existing test files (see "Writing New Tests" above).
+   - **Always add tests when changing source code.** Any new function, modified behaviour, or new data structure in the engine files must be accompanied by unit tests in the same commit. Tests are added retroactively for any untested logic discovered during a change.
+   - **Run `npm run test:unit` before committing** and confirm `# fail 0` before pushing.
 7. **Comment new logic** — the codebase uses JSDoc-style comments; follow this convention for new functions.
 8. **Hardcoded config is intentional** — constants like canvas size, FPS, and tile dimensions are hardcoded in `SceneManager.js`. Do not extract them to config files unless asked.
 9. **Game state is in-memory only** — there is no database or localStorage persistence. Do not assume persistence exists.
