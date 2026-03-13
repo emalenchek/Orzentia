@@ -14,14 +14,26 @@ GameState.exampleNpc = {
     "name": "Villager",
     // world-space position (same coordinate system as enemies)
     "location": { x: 250, y: 250 },
-    // placeholder colour used until a real spritesheet is assigned
+    // placeholder colour kept for backward compatibility
     "spriteColor": "#8899aa",
-    "width": 22,
-    "height": 32,
+    // rendered size matches CharacterSprites output (16×24 native × 2.5 scale)
+    "width": 40,
+    "height": 60,
     // player must be within this many pixels (true canvas coords) to interact
     "interactionRange": 80,
     // array of dialogue strings; each string is one "page" in the dialogue box
-    "dialogue": [ "..." ]
+    "dialogue": [ "..." ],
+    // visual appearance used by CharacterSprites.renderCharacter
+    "appearance": {
+        "base": "male",
+        "hairStyle": "short",
+        "hairColor": "#3D2B1F",
+        "clothing": "tunic",
+        "clothingColor": "#8899aa",
+        "pantsColor": "#3A3028",
+        "skinColor": "#F4C4A1",
+        "shoeColor": "#2A1A10"
+    }
 };
 
 /**
@@ -35,79 +47,139 @@ GameState.villageNpcDefinitions = [
         "name": "Edren",
         "location": { x: 320, y: 180 },
         "spriteColor": "#c87941",
-        "width": 22,
-        "height": 32,
+        "width": 40,
+        "height": 60,
         "interactionRange": 80,
         "dialogue": [
             "Still at it. The night stoke finished well -- good ashglass across the eastern furnace.",
             "Sort through it carefully. The last batch had contamination mixed in. We can't afford a spoiled load.",
             "The eggs are stable. Go on."
-        ]
+        ],
+        "appearance": {
+            "base": "male",
+            "hairStyle": "short",
+            "hairColor": "#5C3A1E",
+            "clothing": "armor",
+            "clothingColor": "#c87941",
+            "pantsColor": "#4A3020",
+            "skinColor": "#D4A070",
+            "shoeColor": "#2A1A10"
+        }
     },
     {
         "name": "Sela",
         "location": { x: 140, y: 200 },
         "spriteColor": "#7a9fc4",
-        "width": 22,
-        "height": 32,
+        "width": 40,
+        "height": 60,
         "interactionRange": 80,
         "dialogue": [
             "Don't track ash in here. I just finished cataloguing the cycle logs.",
             "The kingdom's monthly supply order arrived. Same quantities as last season. Nothing unusual.",
             "Father's been up since the third bell. He won't say why."
-        ]
+        ],
+        "appearance": {
+            "base": "female",
+            "hairStyle": "long",
+            "hairColor": "#1A1A2E",
+            "clothing": "robe",
+            "clothingColor": "#7a9fc4",
+            "pantsColor": "#3A3A5A",
+            "skinColor": "#F0C8A0",
+            "shoeColor": "#3A2A18"
+        }
     },
     {
         "name": "Old Brenn",
         "location": { x: 365, y: 255 },
         "spriteColor": "#9e8b6f",
-        "width": 22,
-        "height": 32,
+        "width": 40,
+        "height": 60,
         "interactionRange": 80,
         "dialogue": [
             "I was your age when they last stoked this one for a fresh clutch. Forty-three years ago, that was.",
             "People always ask me how I stand the waiting. You get used to it. Or you don't, and you leave.",
             "These old stones remember every fire we've given them. Treat them with respect."
-        ]
+        ],
+        "appearance": {
+            "base": "male",
+            "hairStyle": "bald",
+            "hairColor": "#9e8b6f",
+            "clothing": "tunic",
+            "clothingColor": "#9e8b6f",
+            "pantsColor": "#5A4A38",
+            "skinColor": "#C8A880",
+            "shoeColor": "#2A1A10"
+        }
     },
     {
         "name": "Maret",
         "location": { x: 220, y: 315 },
         "spriteColor": "#7dbb8a",
-        "width": 22,
-        "height": 32,
+        "width": 40,
+        "height": 60,
         "interactionRange": 80,
         "dialogue": [
             "Did you see the messenger from the capital? Rode in this morning. Didn't even water his horse first.",
             "Father Edren looked calm when he read the letter. You know how he gets when he's actually calm.",
             "I'm sure it's nothing. It's always nothing. Right?"
-        ]
+        ],
+        "appearance": {
+            "base": "female",
+            "hairStyle": "long",
+            "hairColor": "#2E5C1A",
+            "clothing": "tunic",
+            "clothingColor": "#7dbb8a",
+            "pantsColor": "#3A4A30",
+            "skinColor": "#E8C090",
+            "shoeColor": "#2A1A10"
+        }
     },
     {
         "name": "Kael",
         "location": { x: 100, y: 315 },
         "spriteColor": "#b07ab0",
-        "width": 22,
-        "height": 32,
+        "width": 40,
+        "height": 60,
         "interactionRange": 80,
         "dialogue": [
             "Long road back. The capital's noisier than I remembered. More soldiers everywhere.",
             "Don't ask me about it yet. I need to speak with Sela first. Officially.",
             "Just -- keep doing what you're doing. I'll explain everything soon."
-        ]
+        ],
+        "appearance": {
+            "base": "male",
+            "hairStyle": "short",
+            "hairColor": "#2A1A3E",
+            "clothing": "armor",
+            "clothingColor": "#b07ab0",
+            "pantsColor": "#3A2A48",
+            "skinColor": "#F4C4A1",
+            "shoeColor": "#2A1A10"
+        }
     },
     {
         "name": "Squink",
         "location": { x: 385, y: 315 },
         "spriteColor": "#4da89e",
-        "width": 22,
-        "height": 32,
+        "width": 40,
+        "height": 60,
         "interactionRange": 80,
         "dialogue": [
             "You're the one they have picking up the ashes. I could think of worse jobs. I have thought of worse jobs.",
             "The heat doesn't bother me. In case you were wondering.",
             "You keep coming back. I'll call that progress."
-        ]
+        ],
+        "appearance": {
+            "base": "male",
+            "hairStyle": "bald",
+            "hairColor": "#4da89e",
+            "clothing": "robe",
+            "clothingColor": "#4da89e",
+            "pantsColor": "#2A5A56",
+            "skinColor": "#D8B890",
+            "shoeColor": "#2A1A10"
+        }
     }
 ];
 
@@ -152,10 +224,11 @@ GameState.newStateTemplate = {
         // This will be where all information regarding the player is stored
         // Name, Health, Level(?), inventory, equipped, spells/abilities, etc.
         "health": 5,
-        "width": 11 * 2,
-        "height": 16 * 2,
-        "spriteWidth": 11 * 2,
-        "spriteHeight": 16 * 2,
+        // rendered size matches CharacterSprites output (16×24 native × 2.5 scale = 40×60)
+        "width": 40,
+        "height": 60,
+        "spriteWidth": 16,
+        "spriteHeight": 24,
         "level": 1,
         "experience": 0,
         "inventory": [],
@@ -186,6 +259,17 @@ GameState.newStateTemplate = {
         "orientation": "S",
         "rotation": 0,
         "spritesheetSource": "./assets/spritesheets/chaseStormSprites.png",
+        // visual appearance used by CharacterSprites.renderCharacter
+        "appearance": {
+            "base": "male",
+            "hairStyle": "short",
+            "hairColor": "#3D2B1F",
+            "clothing": "tunic",
+            "clothingColor": "#5B7A4E",
+            "pantsColor": "#3A3028",
+            "skinColor": "#F4C4A1",
+            "shoeColor": "#2A1A10"
+        },
         // unsure on the name for now, but it sounds pretty swag
         "incarnate": {
             "school": "fire",

@@ -9,9 +9,12 @@ const { loadEngine } = require('./helpers/setup');
 //
 // Formula (derived from the source):
 //   trueX = (canvasEl.width  / 2) - (PLAYER_WIDTH  / 2) + x
-//         = (500 / 2) - (22 / 2) + x = 239 + x
+//         = (500 / 2) - (40 / 2) + x = 230 + x
 //   trueY = (canvasEl.height / 2) - (PLAYER_HEIGHT / 2) - y
-//         = (500 / 2) - (32 / 2) - y = 234 - y
+//         = (500 / 2) - (60 / 2) - y = 220 - y
+//
+// PLAYER_WIDTH=40 and PLAYER_HEIGHT=60 match the 16×24 native pixel character
+// art scaled 2.5× to align with the 40 px tileset tile width.
 //
 // Note: the function guards against falsy x/y by treating them as 0.
 //
@@ -30,39 +33,39 @@ describe('SceneManager.getTrueLocation', () => {
     it('returns the canvas centre offset when x=0, y=0', () => {
         const result = SceneManager.getTrueLocation(0, 0);
         // x and y are falsy (0), so the guard resets them to 0 — same result
-        assert.strictEqual(result.x, 239);
-        assert.strictEqual(result.y, 234);
+        assert.strictEqual(result.x, 230);
+        assert.strictEqual(result.y, 220);
     });
 
     it('shifts x rightward when x is positive', () => {
         const result = SceneManager.getTrueLocation(100, 0);
-        assert.strictEqual(result.x, 339);
-        assert.strictEqual(result.y, 234);
+        assert.strictEqual(result.x, 330);
+        assert.strictEqual(result.y, 220);
     });
 
     it('shifts x leftward when x is negative', () => {
         const result = SceneManager.getTrueLocation(-50, 0);
-        assert.strictEqual(result.x, 189);
-        assert.strictEqual(result.y, 234);
+        assert.strictEqual(result.x, 180);
+        assert.strictEqual(result.y, 220);
     });
 
     it('shifts y upward (smaller value) when y is positive', () => {
         // Positive y in game coords = player moved up the map = lower canvas y
         const result = SceneManager.getTrueLocation(0, 50);
-        assert.strictEqual(result.x, 239);
-        assert.strictEqual(result.y, 184);
+        assert.strictEqual(result.x, 230);
+        assert.strictEqual(result.y, 170);
     });
 
     it('shifts y downward (larger value) when y is negative', () => {
         const result = SceneManager.getTrueLocation(0, -50);
-        assert.strictEqual(result.x, 239);
-        assert.strictEqual(result.y, 284);
+        assert.strictEqual(result.x, 230);
+        assert.strictEqual(result.y, 270);
     });
 
     it('handles both x and y offsets simultaneously', () => {
         const result = SceneManager.getTrueLocation(10, 20);
-        assert.strictEqual(result.x, 249);
-        assert.strictEqual(result.y, 214);
+        assert.strictEqual(result.x, 240);
+        assert.strictEqual(result.y, 200);
     });
 
     it('returns an object with x and y properties', () => {

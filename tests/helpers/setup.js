@@ -78,7 +78,7 @@ function makeBrowserMocks() {
 function loadEngine() {
     const ctx = vm.createContext(makeBrowserMocks());
 
-    const files = ['GameState.js', 'GUI.js', 'SceneManager.js', 'Game.js'];
+    const files = ['GameState.js', 'GUI.js', 'CharacterSprites.js', 'SceneManager.js', 'Game.js'];
     for (const file of files) {
         const code = fs.readFileSync(path.join(ENGINE_DIR, file), 'utf8');
         vm.runInContext(code, ctx);
@@ -109,8 +109,8 @@ function makeGameState(overrides) {
         player: {
             health: 5,
             maxHealth: 5,
-            width: 22,
-            height: 32,
+            width: 40,
+            height: 60,
             speed: 5,
             strength: 1,
             level: 1,
@@ -186,10 +186,20 @@ function makeNpc(overrides) {
         name: 'Test NPC',
         location: { x: 280, y: 234 },
         spriteColor: '#aabbcc',
-        width: 22,
-        height: 32,
+        width: 40,
+        height: 60,
         interactionRange: 80,
-        dialogue: ['Hello.', 'Goodbye.']
+        dialogue: ['Hello.', 'Goodbye.'],
+        appearance: {
+            base: 'male',
+            hairStyle: 'short',
+            hairColor: '#3D2B1F',
+            clothing: 'tunic',
+            clothingColor: '#5B7A4E',
+            pantsColor: '#3A3028',
+            skinColor: '#F4C4A1',
+            shoeColor: '#2A1A10'
+        }
     };
 
     if (overrides) {
