@@ -79,7 +79,7 @@ GameState.newStateTemplate = {
         // N,S,E,W (direction being faced)
         "orientation": "S",
         "rotation": 0,
-        "spritesheetSource": "./assets/spritesheets/chaseStormSprites.png",
+        "spritesheetSource": "./assets/spritesheets/heroSprites.png",
         // unsure on the name for now, but it sounds pretty swag
         "incarnate": {
             "school": "fire",
